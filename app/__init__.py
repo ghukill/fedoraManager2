@@ -7,6 +7,9 @@ import time
 import json
 import pickle
 
+import tasks
+
+
 def make_celery(app):
 	celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
 	celery.conf.update(app.config)
@@ -39,7 +42,7 @@ r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)
 @celery.task()
 def add_together(a, b, count):
 	print "Starting:",count
-	time.sleep(.25)
+	time.sleep(.1)
 	return a + b
 
 
@@ -49,7 +52,7 @@ def index():
 	print "Starting request..."
 	# celery task deploying
 	count = 0
-	task_num = 500
+	task_num = 100
 	results = {}
 
 	# increment and get job num
