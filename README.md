@@ -1,4 +1,5 @@
-fedoraManager2
-==============
+<h1>fedoraManager2 Testing on Mitten</h1>
 
-testing for fedoraManager2 until we go live, then burn this
+<p>For the testing of flask apps in twisted, pushing jobs to celery</p>
+
+
