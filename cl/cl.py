@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from celery import Celery
 
 # instantiate Celery object
-celery = Celery(include=[
+celery = Celery(backend='redis://localhost:6379/1',include=[
                          'actions.actions'
                         ])
 

@@ -1,11 +1,12 @@
-import models
-
 from flask import Flask, render_template, g
 import redis
-# from celery import Celery
 import time
 import json
 import pickle
+
+import models
+from actions.actions import * #our instance of celery comes from this import
+
 
 app = Flask(__name__)
 app.debug = True
@@ -24,19 +25,14 @@ app.debug = True
 # 	return celery
 
 # celery updates
-app.config.update(
-	CELERY_BROKER_URL='redis://localhost:6379/0',
-	CELERY_RESULT_BACKEND='redis://localhost:6379/1',
-	CELERY_RESULT_SERIALIZER='json',
-)
+# app.config.update(
+# 	CELERY_BROKER_URL='redis://localhost:6379/0',
+# 	CELERY_RESULT_BACKEND='redis://localhost:6379/1',
+# 	CELERY_RESULT_SERIALIZER='json',
+# )
 
 # print "About to make celery!"
 # celery = make_celery(app)
-
-
-#prepare handle to redis for batching jobs
-r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
-
 
 # @celery.task()
 # def add_together(a, b, count):
@@ -45,8 +41,11 @@ r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)
 # 	return a + b
 
 
+#prepare handle to redis for batching jobs
+r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
+
+
 @app.route("/")
-# @app.route("/<user>/<job>")
 def index():
 	print "Starting request..."
 	# celery task deploying
