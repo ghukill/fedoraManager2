@@ -4,7 +4,7 @@ from celery import Celery
 
 # instantiate Celery object
 celery = Celery(backend='redis://localhost:6379/1',include=[
-                         'actions.actions'
+                         'app.actions.actions'
                         ])
 
 # import celery config file

@@ -1,27 +1,7 @@
-# modules / packages import
-from flask import Flask, render_template, g
-import redis
+from app import app
+
+# local
 import time
-import json
-import pickle
-
-# project imports
-import models
-# get celery instance / handle
-from cl.cl import celery 
-# get celery hooked actions
-from app.actions import actions 
-# get handlers
-# import app.views
-
-# create app
-app = Flask(__name__)
-app.debug = True
-
-# MOVE THIS 
-#prepare handle to redis for batching jobs
-r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
-
 
 @app.route("/quickAdd/<task_num>")
 def index(task_num):
@@ -137,9 +117,3 @@ def job_status(job_num):
 
 	# check status	
 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
-
-
-
-
-
-
