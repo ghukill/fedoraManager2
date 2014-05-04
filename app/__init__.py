@@ -2,28 +2,26 @@ import models
 
 from flask import Flask, render_template, g
 import redis
-from celery import Celery
+# from celery import Celery
 import time
 import json
 import pickle
 
-import tasks
-
-
-def make_celery(app):
-	celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
-	celery.conf.update(app.config)
-	TaskBase = celery.Task
-	class ContextTask(TaskBase):
-		abstract = True
-		def __call__(self, *args, **kwargs):
-			with app.app_context():
-				return TaskBase.__call__(self, *args, **kwargs)
-	celery.Task = ContextTask
-	return celery
-
 app = Flask(__name__)
 app.debug = True
+
+
+# def make_celery(app):
+# 	celery = Celery(app.import_name, backend=app.config['CELERY_RESULT_BACKEND'], broker=app.config['CELERY_BROKER_URL'])
+# 	celery.conf.update(app.config)
+# 	TaskBase = celery.Task
+# 	class ContextTask(TaskBase):
+# 		abstract = True
+# 		def __call__(self, *args, **kwargs):
+# 			with app.app_context():
+# 				return TaskBase.__call__(self, *args, **kwargs)
+# 	celery.Task = ContextTask
+# 	return celery
 
 # celery updates
 app.config.update(
@@ -32,18 +30,19 @@ app.config.update(
 	CELERY_RESULT_SERIALIZER='json',
 )
 
-celery = make_celery(app)
+# print "About to make celery!"
+# celery = make_celery(app)
 
 
 #prepare handle to redis for batching jobs
-r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)
+r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
 
 
-@celery.task()
-def add_together(a, b, count):
-	print "Starting:",count
-	time.sleep(.1)
-	return a + b
+# @celery.task()
+# def add_together(a, b, count):
+# 	print "Starting:",count
+# 	time.sleep(.1)
+# 	return a + b
 
 
 @app.route("/")
