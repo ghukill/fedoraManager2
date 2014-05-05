@@ -10,6 +10,6 @@ resource = WSGIResource(reactor, reactor.getThreadPool(), app)
 site = Site(resource)
 
 if __name__ == '__main__':
-	print "Firing up..."
+	print "Starting fedoraManager2 server..."
 	reactor.listenTCP( 5001, site )
 	reactor.run()

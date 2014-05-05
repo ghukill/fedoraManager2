@@ -1,7 +1,16 @@
 from app import app
-
-# local
+from app import models
+from app.actions import actions
+import redis
 import time
+import json
+import pickle
+
+# get celery instance / handle
+from cl.cl import celery
+
+# redis handle
+r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
 
 @app.route("/quickAdd/<task_num>")
 def index(task_num):
