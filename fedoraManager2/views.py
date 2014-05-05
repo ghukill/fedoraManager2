@@ -1,6 +1,6 @@
-from app import app
-from app import models
-from app.actions import actions
+from fedoraManager2 import app
+from fedoraManager2 import models
+from fedoraManager2.actions import actions
 import redis
 import time
 import json

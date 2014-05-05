@@ -4,7 +4,7 @@ from twisted.web.wsgi import WSGIResource
 from twisted.web.server import Site
 
 # import app
-from app import app
+from fedoraManager2 import app
 
 resource = WSGIResource(reactor, reactor.getThreadPool(), app)
 site = Site(resource)
