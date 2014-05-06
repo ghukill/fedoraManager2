@@ -1,35 +1,32 @@
 from fedoraManager2 import app
 from fedoraManager2 import models
 from fedoraManager2.actions import actions
-import redis
+
 import time
 import json
 import pickle
 
 # get celery instance / handle
 from cl.cl import celery
+import jobs
 
-# redis handle
-r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)	
+	
 
 @app.route("/quickAdd/<task_num>")
 def quickAdd(task_num):
 	print "Starting request..."
-	# celery task deploying
+	
 	count = 0
 	task_num = int(task_num)
-	results = {}
+	results = {}	
 
-	# increment and get job num	
-	job_num = r_batch_handle.incr("job_num")
-	print "Beginning job #",job_num
-	jobHand = models.jobBlob(job_num)	
+	# instatiate jobHand object
+	jobHand = jobs.jobStart()
 
 	# set estimated number of tasks
 	jobHand.estimated_tasks = task_num	
 	while count < task_num:		
-		result = actions.quickAdd.delay(41, 1, count)
-		# jobHand.assigned_tasks.append((count,result))
+		result = actions.quickAdd.delay(41, 1, count)		
 		jobHand.assigned_tasks.append(str(result))
 		print count, result		
 		results[count] = str(result)
@@ -38,13 +35,13 @@ def quickAdd(task_num):
 	# copy all tasks to pending
 	jobHand.pending_tasks = jobHand.assigned_tasks[:]
 
-	print "Finished job #",job_num	
+	print "Finished job #",jobHand.job_num		
 
-	# push jobBlob to redis /2 / need to pickle first
-	jobHand_pickled = pickle.dumps(jobHand)
-	r_batch_handle.set("job_{job_num}".format(job_num=job_num),jobHand_pickled)
+	# update job
+	jobs.jobUpdate(jobHand)
 
-	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=job_num)
+	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
 
 @app.route("/longAdd/<task_num>")
 def longAdd(task_num):
@@ -54,16 +51,13 @@ def longAdd(task_num):
 	task_num = int(task_num)
 	results = {}
 
-	# increment and get job num	
-	job_num = r_batch_handle.incr("job_num")
-	print "Beginning job #",job_num
-	jobHand = models.jobBlob(job_num)	
+	# instatiate jobHand object
+	jobHand = jobs.jobStart()	
 
 	# set estimated number of tasks
 	jobHand.estimated_tasks = task_num	
 	while count < task_num:		
-		result = actions.longAdd.delay(41, 1, count)
-		# jobHand.assigned_tasks.append((count,result))
+		result = actions.longAdd.delay(41, 1, count)		
 		jobHand.assigned_tasks.append(str(result))
 		print count, result		
 		results[count] = str(result)
@@ -72,13 +66,12 @@ def longAdd(task_num):
 	# copy all tasks to pending
 	jobHand.pending_tasks = jobHand.assigned_tasks[:]
 
-	print "Finished job #",job_num	
+	print "Finished job #",jobHand.job_num	
 
-	# push jobBlob to redis /2 / need to pickle first
-	jobHand_pickled = pickle.dumps(jobHand)
-	r_batch_handle.set("job_{job_num}".format(job_num=job_num),jobHand_pickled)
+	# update job
+	jobs.jobUpdate(jobHand)
 
-	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=job_num)
+	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
 @app.route("/task_status/<task_id>")
@@ -97,30 +90,13 @@ def task_status(task_id):
 
 
 @app.route("/job_status/<job_num>")
-def job_status(job_num):	
-
-	'''
-	There is an element of analysis to this, WHERE this happens will be important.
-	Example this check is working nicely only when it runs to refresh
-		- polling might take care of a lot of this..
-
-	Improvements:
-		- first shunts assigned_tasks to pending and completed
-		- then, only do pending, checks get faster each time
-
-	* Not a lot of sense of doing too much optimizing here, will be breaking these out soon enough
-	* These can ALL return JSON that can be nicely formatted with Javacript via long-polling
-	* need some check to see if ANY pending jobs have run, otherwise avoid checking them all
-		- you could check jobHand.pending_tasks[0], if this is still "PENDING", then don't bother (lines 148-152)
-	* using time.time() to time the whole thing, consider pushing these to a list in jobHand for optimizing later on
-	'''
+def job_status(job_num):		
 	
 	# start timer
 	stime = time.time()
 
-	# retrieving and unpickling from redis	
-	jobHand_pickled = r_batch_handle.get("job_{job_num}".format(job_num=job_num))
-	jobHand = pickle.loads(jobHand_pickled)	
+	# get job
+	jobHand = jobs.jobGet(job_num)
 
 	# check if pending jobs done
 	if len(jobHand.pending_tasks) == 0:
@@ -152,11 +128,20 @@ def job_status(job_num):
 	ttime = (etime - stime) * 1000
 	print "Pending / Completion check took",ttime,"ms"	
 
-	# update job in redis	
-	jobHand_pickled = pickle.dumps(jobHand)
-	r_batch_handle.set("job_{job_num}".format(job_num=job_num),jobHand_pickled)
-
-	
+	# update job
+	jobs.jobUpdate(jobHand)	
 
 	# check status	
 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
+
+
+
+
+
+
+
+
+
+
+
+
