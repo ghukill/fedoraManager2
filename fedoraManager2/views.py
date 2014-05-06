@@ -40,6 +40,9 @@ def quickAdd(task_num):
 	# update job
 	jobs.jobUpdate(jobHand)
 
+	# TESTING OF CLASS METHODS
+	# jobHand.update()
+
 	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
