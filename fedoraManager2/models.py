@@ -15,7 +15,7 @@ class jobBlob:
 
 	# NEEDS MUCH MORE INVESTIGATING
 	############################################################################
-	# 	# redis handle
+		# redis handle
 	# 	self.r_batch_handle = redis.StrictRedis(host='localhost', port=6379, db=2)
 
 	# def update(self):		
