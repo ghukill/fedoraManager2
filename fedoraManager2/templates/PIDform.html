@@ -1,0 +1,7 @@
+<p>Welcome to your first form.</p>
+<form method="POST" action="/formTest">
+    {{ form.csrf_token }}
+    {{ form.username.label }} {{ form.username(size=20) }}</br>
+    {{ form.PID.label }} {{ form.PID(size=20) }}
+    <input type="submit" value="Go">
+</form>

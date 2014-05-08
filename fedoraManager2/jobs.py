@@ -18,6 +18,11 @@ def jobStart():
 
 def jobUpdate(jobHand):
 	# push jobBlob to redis /2 / need to pickle first
+
+	'''
+	Add username instead of 'job'?
+	'''
+
 	jobHand_pickled = pickle.dumps(jobHand)
 	r_batch_handle.set("job_{job_num}".format(job_num=jobHand.job_num),jobHand_pickled)
 

@@ -2,6 +2,13 @@ from fedoraManager2 import app
 from fedoraManager2 import models
 from fedoraManager2.actions import actions
 
+# flask proper
+from flask import render_template, request, session
+
+# forms
+from flask_wtf import Form
+from wtforms import TextField
+
 import time
 import json
 import pickle
@@ -9,6 +16,13 @@ import pickle
 # get celery instance / handle
 from cl.cl import celery
 import jobs
+import forms
+
+# fake session data
+####################################
+# set the secret key
+app.secret_key = 'ShoppingHorse'
+####################################
 
 	
 
@@ -136,6 +150,40 @@ def job_status(job_num):
 
 	# check status	
 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
+
+
+# Session Testing
+@app.route("/sessionSet/<name>")
+def sessionSet(name):	
+	session['name'] = name
+	return "You have changed the session name to {name}.".format(name=name)
+
+@app.route("/sessionCheck")
+def sessionCheck():		
+	name = session['username']
+	return "You have retrieved the session name {name}.".format(name=name)
+
+
+# Form testing
+@app.route("/formTest", methods=['POST', 'GET'])
+def formTest():
+    form = forms.pidSelection(request.form)
+    if request.method == 'POST':   
+    	print dir(form.username)           
+        username = form.username.data
+        PID = form.PID.data
+        return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)        
+        return "Great success!"
+    return render_template('PIDform.html', form=form)
+
+
+
+# Catch all - DON'T REMOVE
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):    
+	return render_template("404.html")
+
 
 
 
