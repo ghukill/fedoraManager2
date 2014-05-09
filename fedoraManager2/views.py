@@ -3,7 +3,7 @@ from fedoraManager2 import models
 from fedoraManager2.actions import actions
 
 # flask proper
-from flask import render_template, request, session
+from flask import render_template, request, session, redirect
 
 # forms
 from flask_wtf import Form
@@ -180,6 +180,7 @@ def PIDselection():
 		print form.data.viewkeys()
 		# send PIDs to Redis
 		jobs.sendSelectedPIDs(username,PID)
+		return redirect("/PIDcheck/{username}/1".format(username=username))
 		return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
 	return render_template('PIDform.html', form=form)
 
@@ -187,21 +188,22 @@ def PIDselection():
 @app.route("/PIDcheck/<username>/<pagenum>")
 def PIDcheck(username,pagenum):
 
-	# selectedPIDs = r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1)	
-	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
-	print "Found {count} PIDs for {username}".format(count=list_length,username=username)	
-	
+	# start timer
+	stime = time.time()
 
-	# create paginator and extract current page (cpage) PIDs
-	key = 'paginator:{}'.format(uuid4().hex)
-	for PID in r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1):
-		r_selectedPIDs_handle.rpush(key, PID)
-	p = ListPaginator(r_selectedPIDs_handle, key, 10)
+	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
+	print "Found {count} PIDs for {username}".format(count=list_length,username=username)
+
+	p = ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
 	cpage = p.page(pagenum)	
 
-	# pass the current PIDs to page as list
-	r_selectedPIDs_handle.delete(key)	
+	# report time passed	
+	etime = time.time()
+	ttime = (etime - stime) * 1000
+	print "PID retrieval took",ttime,"ms"	
+
+	# pass the current PIDs to page as list	
 	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage)
 
 
