@@ -9,6 +9,9 @@ from flask import render_template, request, session
 from flask_wtf import Form
 from wtforms import TextField
 
+# zato paginator
+from zato.redis_paginator import ListPaginator, ZSetPaginator
+
 import time
 import json
 import pickle
@@ -18,6 +21,8 @@ from cl.cl import celery
 import jobs
 import forms
 from redisHandles import *
+
+from uuid import uuid4
 
 # fake session data
 ####################################
@@ -168,22 +173,36 @@ def sessionCheck():
 # PID selection sandboxing
 @app.route("/PIDselection", methods=['POST', 'GET'])
 def PIDselection():
-    form = forms.PIDselection(request.form)
-    if request.method == 'POST':
-        username = form.username.data
-        PID = form.PID.data
-        print form.data.viewkeys()
-        # send PIDs to Redis
-        jobs.sendSelectedPIDs(username,PID)
-        return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
-    return render_template('PIDform.html', form=form)
-
-@app.route("/PIDcheck/<username>")
-def PIDcheck(username):	
+	form = forms.PIDselection(request.form)
+	if request.method == 'POST':
+		username = form.username.data
+		PID = form.PID.data
+		print form.data.viewkeys()
+		# send PIDs to Redis
+		jobs.sendSelectedPIDs(username,PID)
+		return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
+	return render_template('PIDform.html', form=form)
 
 
-	selectedPIDs = r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1)
-	return "You have selected the following PID: {selectedPIDs}".format(selectedPIDs=selectedPIDs)
+@app.route("/PIDcheck/<username>/<pagenum>")
+def PIDcheck(username,pagenum):
+
+	# selectedPIDs = r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1)	
+	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
+	print "Found {count} PIDs for {username}".format(count=list_length,username=username)	
+	
+
+	# create paginator and extract current page (cpage) PIDs
+	key = 'paginator:{}'.format(uuid4().hex)
+	for PID in r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1):
+		r_selectedPIDs_handle.rpush(key, PID)
+	p = ListPaginator(r_selectedPIDs_handle, key, 10)
+	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
+	cpage = p.page(pagenum)	
+
+	# pass the current PIDs to page as list
+	r_selectedPIDs_handle.delete(key)	
+	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage)
 
 
 # Catch all - DON'T REMOVE

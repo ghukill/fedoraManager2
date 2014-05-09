@@ -1,0 +1,15 @@
+Dependencies
+---------------------------
+zato-redis-paginator
+	https://github.com/zatosource/zato-redis-paginator
+python-redis
+
+
+
+
+Redis mappings
+---------------------------
+db 0 = celery broker
+db 1 = celery results
+db 2 = job status / results
+db 3 = user selected PIDs

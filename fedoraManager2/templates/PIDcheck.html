@@ -1,0 +1,7 @@
+<h1>The PIDs you have...</h1>
+<ul>
+	{% for PID in cpage.object_list %}
+		<li>{{PID}}</li>
+	{% endfor %}
+</ul>
+{% for page in p.page_range %} <a href="/PIDcheck/{{username}}/{{page}}">{{page}}</a> {% endfor %}

@@ -1,4 +1,0 @@
-db 0 = celery broker
-db 1 = celery results
-db 2 = job status / results
-db 3 = user selected PIDs
