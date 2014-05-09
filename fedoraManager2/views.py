@@ -194,6 +194,7 @@ def PIDcheck(username,pagenum):
 	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
 	print "Found {count} PIDs for {username}".format(count=list_length,username=username)
 
+	# entirety of pagination code - lightning fast, can break this out somewhere else
 	p = ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
 	cpage = p.page(pagenum)	
