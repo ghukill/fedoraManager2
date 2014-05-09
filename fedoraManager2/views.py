@@ -17,6 +17,7 @@ import pickle
 from cl.cl import celery
 import jobs
 import forms
+from redisHandles import *
 
 # fake session data
 ####################################
@@ -160,22 +161,29 @@ def sessionSet(name):
 
 @app.route("/sessionCheck")
 def sessionCheck():		
-	name = session['username']
+	name = session['name']
 	return "You have retrieved the session name {name}.".format(name=name)
 
 
-# Form testing
-@app.route("/formTest", methods=['POST', 'GET'])
-def formTest():
-    form = forms.pidSelection(request.form)
-    if request.method == 'POST':   
-    	print dir(form.username)           
+# PID selection sandboxing
+@app.route("/PIDselection", methods=['POST', 'GET'])
+def PIDselection():
+    form = forms.PIDselection(request.form)
+    if request.method == 'POST':
         username = form.username.data
         PID = form.PID.data
-        return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)        
-        return "Great success!"
+        print form.data.viewkeys()
+        # send PIDs to Redis
+        jobs.sendSelectedPIDs(username,PID)
+        return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
     return render_template('PIDform.html', form=form)
 
+@app.route("/PIDcheck/<username>")
+def PIDcheck(username):	
+
+
+	selectedPIDs = r_selectedPIDs_handle.lrange("{username}_selectedPIDs".format(username=username),0,-1)
+	return "You have selected the following PID: {selectedPIDs}".format(selectedPIDs=selectedPIDs)
 
 
 # Catch all - DON'T REMOVE
