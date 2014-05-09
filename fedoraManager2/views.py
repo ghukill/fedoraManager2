@@ -204,7 +204,7 @@ def PIDcheck(username,pagenum):
 	print "PID retrieval took",ttime,"ms"	
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage)
+	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage,pagenum=int(pagenum))
 
 
 # Catch all - DON'T REMOVE

@@ -4,4 +4,4 @@
 		<li>{{PID}}</li>
 	{% endfor %}
 </ul>
-{% for page in p.page_range %} <a href="/PIDcheck/{{username}}/{{page}}">{{page}}</a> {% endfor %}
+<a href="/PIDcheck/{{username}}/{{pagenum - 1}}">Previous</a> / Page <strong>{{pagenum}}</strong> of {{p.num_pages}} / <a href="/PIDcheck/{{username}}/{{pagenum + 1}}">Next</a>
