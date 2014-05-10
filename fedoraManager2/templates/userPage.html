@@ -1,0 +1,16 @@
+{% include 'header.html' %}
+<!-- User Page -->
+<h1>Welcome {{userData.username}}, great bounty awaits!</h1>
+<p><span style="color:green;">username set to session</span></p>
+<ul>
+	<li><strong>Runs testing tasks based on selected PIDs</strong></li>
+	<ul>
+		<li><a href="/quickAddUser">quickAdd</a></li>
+		<li><a href="/longAddUser">longAdd</a></li>
+	</ul>
+	<li><strong>PID Selection</strong></li>
+	<ul>
+		<li><a href="/PIDselectionUser">PIDselection for {{userData.username}}</a></li>
+		<li><a href="/PIDcheckUser/1">PIDcheck</a></li>
+	</ul>
+</ul>

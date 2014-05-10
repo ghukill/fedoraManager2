@@ -1,4 +1,4 @@
-<h1>Welcome {{username}}, the PIDs you have requested!</h1>
+<h1>Welcome <span style="color:green;">{{username}}</span>, the PIDs you have requested!</h1>
 <ul>
 	{% for PID in cpage.object_list %}
 		<li>{{PID}}</li>

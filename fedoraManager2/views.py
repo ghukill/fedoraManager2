@@ -15,6 +15,7 @@ from zato.redis_paginator import ListPaginator, ZSetPaginator
 import time
 import json
 import pickle
+import sys
 
 # get celery instance / handle
 from cl.cl import celery
@@ -30,71 +31,76 @@ from uuid import uuid4
 app.secret_key = 'ShoppingHorse'
 ####################################
 
+@app.route("/")
+def index():
+	return render_template("index.html")
 	
 
-@app.route("/quickAdd/<task_num>")
-def quickAdd(task_num):
-	print "Starting request..."
+# @app.route("/quickAdd/<task_num>")
+# def quickAdd(task_num):
+# 	print "Starting request..."
 	
-	count = 0
-	task_num = int(task_num)
-	results = {}	
+# 	count = 0
+# 	task_num = int(task_num)
+# 	results = {}	
 
-	# instatiate jobHand object
-	jobHand = jobs.jobStart()
+# 	# instatiate jobHand object
+# 	jobHand = jobs.jobStart()
 
-	# set estimated number of tasks
-	jobHand.estimated_tasks = task_num	
-	while count < task_num:		
-		result = actions.quickAdd.delay(41, 1, count)		
-		jobHand.assigned_tasks.append(str(result))
-		print count, result		
-		results[count] = str(result)
-		count += 1				
+# 	# set estimated number of tasks
+# 	jobHand.estimated_tasks = task_num	
+# 	while count < task_num:		
+# 		result = actions.quickAdd.delay(41, 1, count)		
+# 		jobHand.assigned_tasks.append(str(result))
+# 		print count, result		
+# 		results[count] = str(result)
+# 		count += 1				
 
-	# copy all tasks to pending
-	jobHand.pending_tasks = jobHand.assigned_tasks[:]
+# 	# copy all tasks to pending
+# 	jobHand.pending_tasks = jobHand.assigned_tasks[:]
 
-	print "Finished job #",jobHand.job_num		
+# 	print "Finished job #",jobHand.job_num		
 
-	# update job
-	jobs.jobUpdate(jobHand)
+# 	# update job
+# 	jobs.jobUpdate(jobHand)
 
-	# TESTING OF CLASS METHODS
-	# jobHand.update()
+# 	# TESTING OF CLASS METHODS
+# 	# jobHand.update()
 
-	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+# 	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
-@app.route("/longAdd/<task_num>")
-def longAdd(task_num):
-	print "Starting request..."
-	# celery task deploying
-	count = 0
-	task_num = int(task_num)
-	results = {}
+# @app.route("/longAdd/<task_num>")
+# def longAdd(task_num):
+# 	print "Starting request..."
+# 	# celery task deploying
+# 	count = 0
+# 	task_num = int(task_num)
+# 	results = {}
 
-	# instatiate jobHand object
-	jobHand = jobs.jobStart()	
+# 	# instatiate jobHand object
+# 	jobHand = jobs.jobStart()	
 
-	# set estimated number of tasks
-	jobHand.estimated_tasks = task_num	
-	while count < task_num:		
-		result = actions.longAdd.delay(41, 1, count)		
-		jobHand.assigned_tasks.append(str(result))
-		print count, result		
-		results[count] = str(result)
-		count += 1				
+# 	# set estimated number of tasks
+# 	jobHand.estimated_tasks = task_num	
+# 	while count < task_num:		
+# 		result = actions.longAdd.delay(41, 1, count)		
+# 		jobHand.assigned_tasks.append(str(result))
+# 		print count, result		
+# 		results[count] = str(result)
+# 		count += 1				
 
-	# copy all tasks to pending
-	jobHand.pending_tasks = jobHand.assigned_tasks[:]
+# 	# copy all tasks to pending
+# 	jobHand.pending_tasks = jobHand.assigned_tasks[:]
 
-	print "Finished job #",jobHand.job_num	
+# 	print "Finished job #",jobHand.job_num	
 
-	# update job
-	jobs.jobUpdate(jobHand)
+# 	# update job
+# 	jobs.jobUpdate(jobHand)
 
-	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+# 	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
 
 
 @app.route("/task_status/<task_id>")
@@ -159,43 +165,164 @@ def job_status(job_num):
 
 
 # Session Testing
-@app.route("/sessionSet/<name>")
+@app.route("/sessionSet/<username>")
 def sessionSet(name):	
-	session['name'] = name
-	return "You have changed the session name to {name}.".format(name=name)
+	session['username'] = username
+	return "You have changed the session username to {username}.".format(username=username)
 
 @app.route("/sessionCheck")
 def sessionCheck():		
-	name = session['name']
-	return "You have retrieved the session name {name}.".format(name=name)
+	username = session['username']
+	return "You have retrieved the session username {username}.".format(username=username)
+
+
+# # PID selection sandboxing
+# @app.route("/PIDselection", methods=['POST', 'GET'])
+# def PIDselection():
+# 	form = forms.PIDselection(request.form)
+# 	if request.method == 'POST':
+# 		username = form.username.data
+# 		PID = form.PID.data
+# 		print form.data.viewkeys()
+# 		# send PIDs to Redis
+# 		jobs.sendSelectedPIDs(username,PID)
+# 		return redirect("/PIDcheck/{username}/1".format(username=username))
+# 		return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
+# 	return render_template('PIDform.html', form=form)
+
+
+# @app.route("/PIDcheck/<username>/<pagenum>")
+# def PIDcheck(username,pagenum):
+
+# 	# start timer
+# 	stime = time.time()
+
+# 	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
+# 	print "Found {count} PIDs for {username}".format(count=list_length,username=username)
+
+# 	# entirety of pagination code - lightning fast, can break this out somewhere else
+# 	p = ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+# 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
+# 	cpage = p.page(pagenum)	
+
+# 	# report time passed	
+# 	etime = time.time()
+# 	ttime = (etime - stime) * 1000
+# 	print "PID retrieval took",ttime,"ms"	
+
+# 	# pass the current PIDs to page as list	
+# 	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage,pagenum=int(pagenum))
+
+@app.route('/userPage/<username>')
+def userPage(username):
+	# set username in session
+	session['username'] = username
+
+	# push currently selected PIDs paginator to session?	
+	# p = ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+	# print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
+	# cpage = p.page(pagenum)		
+
+	# info to render page
+	userData = {}
+	userData['username'] = username
+	return render_template("userPage.html",userData=userData)
+
+# Make the following: quickAddUser, longAddUser, PIDselectionUser
+@app.route("/quickAddUser")
+def quickAddUser():
+	print "Starting request..."
+	
+	count = 0
+	task_num = int(task_num)
+	results = {}	
+
+	# instatiate jobHand object
+	jobHand = jobs.jobStart()
+
+	# set estimated number of tasks
+	jobHand.estimated_tasks = task_num	
+	while count < task_num:		
+		result = actions.quickAdd.delay(41, 1, count)		
+		jobHand.assigned_tasks.append(str(result))
+		print count, result		
+		results[count] = str(result)
+		count += 1				
+
+	# copy all tasks to pending
+	jobHand.pending_tasks = jobHand.assigned_tasks[:]
+
+	print "Finished job #",jobHand.job_num		
+
+	# update job
+	jobs.jobUpdate(jobHand)
+
+	# TESTING OF CLASS METHODS
+	# jobHand.update()
+
+	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
+# @app.route("/longAddUser/<task_num>")
+# def longAddUser(task_num):
+# 	print "Starting request..."
+# 	# celery task deploying
+# 	count = 0
+# 	task_num = int(task_num)
+# 	results = {}
+
+# 	# instatiate jobHand object
+# 	jobHand = jobs.jobStart()	
+
+# 	# set estimated number of tasks
+# 	jobHand.estimated_tasks = task_num	
+# 	while count < task_num:		
+# 		result = actions.longAdd.delay(41, 1, count)		
+# 		jobHand.assigned_tasks.append(str(result))
+# 		print count, result		
+# 		results[count] = str(result)
+# 		count += 1				
+
+# 	# copy all tasks to pending
+# 	jobHand.pending_tasks = jobHand.assigned_tasks[:]
+
+# 	print "Finished job #",jobHand.job_num	
+
+# 	# update job
+# 	jobs.jobUpdate(jobHand)
+
+# 	return "You have initiated job {job_num}.  Click <a href='/job_status/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
 # PID selection sandboxing
-@app.route("/PIDselection", methods=['POST', 'GET'])
-def PIDselection():
+@app.route("/PIDselectionUser", methods=['POST', 'GET'])
+def PIDselectionUser():
+	# get username from session
+	username = session['username']
 	form = forms.PIDselection(request.form)
-	if request.method == 'POST':
-		username = form.username.data
-		PID = form.PID.data
-		print form.data.viewkeys()
+	if request.method == 'POST':		
+		PID = form.PID.data		
 		# send PIDs to Redis
 		jobs.sendSelectedPIDs(username,PID)
-		return redirect("/PIDcheck/{username}/1".format(username=username))
-		return "We've got form data, your username is {username}, and your PID is {PID}.".format(username=username,PID=PID)                
-	return render_template('PIDform.html', form=form)
+		return redirect("/PIDcheckUser/1".format(username=username))
+		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
+	return render_template('PIDformUser.html', username=username, form=form)
 
-
-@app.route("/PIDcheck/<username>/<pagenum>")
-def PIDcheck(username,pagenum):
-
+# PID check for user
+@app.route("/PIDcheckUser/<pagenum>")
+def PIDcheckUser(pagenum):
 	# start timer
 	stime = time.time()
+
+	# get username from session
+	username = session['username']
 
 	list_length = r_selectedPIDs_handle.llen("{username}_selectedPIDs".format(username=username))
 	print "Found {count} PIDs for {username}".format(count=list_length,username=username)
 
 	# entirety of pagination code - lightning fast, can break this out somewhere else
 	p = ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+	print "Paginator is",sys.getsizeof(p),"bytes"
 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=p.count,page_count=p.num_pages)				
 	cpage = p.page(pagenum)	
 
@@ -205,8 +332,7 @@ def PIDcheck(username,pagenum):
 	print "PID retrieval took",ttime,"ms"	
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDcheck.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage,pagenum=int(pagenum))
-
+	return render_template("PIDcheckUser.html",cpage_PIDs=cpage.object_list,username=username,p=p,cpage=cpage,pagenum=int(pagenum))
 
 # Catch all - DON'T REMOVE
 @app.route('/', defaults={'path': ''})
