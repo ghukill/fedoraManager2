@@ -138,7 +138,8 @@ def job_status(job_num):
 	stime = time.time()
 
 	# get job
-	jobHand = jobs.jobGet(job_num)
+	jobHand = jobs.jobGet(job_num)['jobHand']
+	jobHandStatus = jobs.jobGet(job_num)['jobStatusHand']
 
 	# check if pending jobs done
 	if len(jobHand.pending_tasks) == 0:
@@ -176,6 +177,49 @@ def job_status(job_num):
 
 	# check status	
 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
+
+@app.route("/job_statusv2/<job_num>")
+def job_statusv2(job_num):		
+
+	'''
+	bug: huge jobs take a proportional amount of time to check
+		500,000 quick tasks...
+		"POST routing length of pending list 281228
+		Pending / Completion check took 375705.010176 ms"
+
+		the bad news:
+		that works out to 6.2 minutes!
+
+		the good news:
+		other processes ran just fine, and the browser waited the whole time
+	'''
+	
+	# start timer
+	stime = time.time()
+
+	# get job
+	jobHand = jobs.jobGet(job_num)['jobHand']
+	jobStatusHand = jobs.jobGet(job_num)['jobStatusHand']
+
+	# check if pending jobs done
+	if len(jobStatusHand.assigned_tasks) == len(jobStatusHand.completed_tasks):
+		return "Job Complete!"
+	
+	# check if job has started at all!
+	# job_start_result = celery.AsyncResult(jobStatusHand.assigned_tasks[0])	
+	# state = job_start_result.state
+	# print "Checking if job started..."
+	# if state == "PENDING":
+	if len(jobStatusHand.completed_tasks) < 1:
+		print "Job Pending, waiting for others to complete.  Isn't that polite?"
+		return "Job Pending, waiting for others to complete.  Isn't that polite?"
+
+	etime = time.time()
+	ttime = (etime - stime) * 1000
+	print "Pending / Completion check took",ttime,"ms"
+
+	# check status	
+	return "{completed} / {total} Completed.".format(completed=len(jobStatusHand.completed_tasks),total=len(jobStatusHand.assigned_tasks))
 
 
 # Session Testing
@@ -245,25 +289,38 @@ def quickAddUser():
 	username = session['username']	
 	userPag = jobs.userPagGen(username)	
 
+	'''
+	The problem is here I think, each task 
+	'''
+
 	# instatiate jobHand object
-	jobHand = jobs.jobStart()
+	jobPlatter = jobs.jobStart()
+	jobHand = jobPlatter['jobHand']
+	jobStatusHand = jobPlatter['jobStatusHand']
+
+	# create jobStatus Placeholder key
+	jobStatusHand_pickled = pickle.dumps(jobStatusHand)				
+	r_job_handle.set("jobStatus_{job_num}".format(job_num=jobStatusHand.job_num),jobStatusHand_pickled)
 
 	# begin job
 	count = 0
 	jobHand.estimated_tasks = userPag.count	
 	while count < userPag.count:		
-		result = actions.quickAdd.delay(41, 1, count)		
-		jobHand.assigned_tasks.append(str(result))
+		'''
+		I think the problem is here - passing a shared object to async task - appending is resulting in list length 1
+		'''
+		result = actions.quickAdd.delay(jobStatusHand.job_num, 41, 1, count)		
+		jobHand.assigned_tasks.append(str(result)) #COMMENTED OUT
 		print count, result				
 		count += 1				
 
 	# copy all tasks to pending
-	jobHand.pending_tasks = jobHand.assigned_tasks[:]
+	jobHand.pending_tasks = jobHand.assigned_tasks[:] #COMMENTED OUT
 
 	print "Finished job #",jobHand.job_num		
 
 	# update job
-	jobs.jobUpdate(jobHand)
+	jobs.jobUpdate(jobHand) #COMMENTED OUT
 
 	# TESTING OF CLASS METHODS
 	# jobHand.update()

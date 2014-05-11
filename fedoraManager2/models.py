@@ -1,7 +1,6 @@
 
 # dp
 import pickle
-import redis
 
 class jobBlob:	
 
