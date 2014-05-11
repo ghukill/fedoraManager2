@@ -9,16 +9,14 @@ import time
 
 
 @celery.task()
-def quickAdd(job_num,a, b, count):
+def quickAdd(jobStatusHand,a, b, count):
+
 	'''
-	maybe get jobStatusHand from redis here, then update...
+	an interesting async problem - when hitting redis, missing a beat here and there...
 	'''
-	# get job	
-	jobHand = jobs.jobGet(job_num)['jobHand']
-	jobStatusHand = jobs.jobGet(job_num)['jobStatusHand']
 
 	# push to jobHand obj
-	jobStatusHand.assigned_tasks.append(count) #added
+	# jobStatusHand.assigned_tasks.append(count) #added
 
 	print "Starting quickAdd:",count	
 
@@ -29,6 +27,7 @@ def quickAdd(job_num,a, b, count):
 	jobs.jobStatusUpdate(jobStatusHand) #added
 
 	# and kick it out
+	time.sleep(.5)
 	return a + b
 
 
