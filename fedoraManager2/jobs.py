@@ -7,9 +7,8 @@ import pickle
 import models
 from redisHandles import *
 
-# # redis handle
-# r_job_handle = redis.StrictRedis(host='localhost', port=6379, db=2)
-# r_selectedPIDs_handle = redis.StrictRedis(host='localhost', port=6379, db=3)
+# zato paginator
+from zato.redis_paginator import ListPaginator, ZSetPaginator
 
 
 # Job Management
@@ -21,11 +20,11 @@ def jobStart():
 	jobHand = models.jobBlob(job_num)
 	return jobHand
 
-def jobUpdate(jobHand):
-	# push jobBlob to redis /2 / need to pickle first
+def jobUpdate(jobHand):	
 
 	'''
 	Add username instead of 'job'?
+	Yes, this would be a good backup to the SQL table that will be holding the jobs as well.
 	'''
 
 	jobHand_pickled = pickle.dumps(jobHand)
@@ -63,6 +62,9 @@ def sendSelectedPIDs(username,PIDs):
 		pipe.rpush("{username}_selectedPIDs".format(username=username),PID)
 	pipe.execute()
 	print "PIDs stored."
+
+def userPagGen(username):
+	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
 
 
 
