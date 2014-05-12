@@ -53,20 +53,6 @@ def jobGet(job_num):
 
 # PID selection
 ############################################################################################################
-'''
-way to return entire list: 
-r_server.lrange("members", 0, -1)
-
-BUT, we can use this list capability to paginate!
-AND, redis can do sets, which only allow unique types!  This is huge.
-	http://degizmo.com/2010/03/22/getting-started-redis-and-python/
-	r_server.sadd("members", "Adam")
-Ordered Sets seals the deal.
-
-User pipes here
-	pipe = r_selectedPIDs_handle.pipeline()
-
-'''
 def sendSelectedPIDs(username,PIDs):
 	print "Storing selected PIDs for {username}".format(username=username)	
 	pipe = r_selectedPIDs_handle.pipeline()

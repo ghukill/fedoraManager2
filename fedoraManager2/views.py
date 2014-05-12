@@ -53,20 +53,7 @@ def task_status(task_id):
 
 
 @app.route("/job_status/<job_num>")
-def job_status(job_num):		
-
-	'''
-	bug: huge jobs take a proportional amount of time to check
-		500,000 quick tasks...
-		"POST routing length of pending list 281228
-		Pending / Completion check took 375705.010176 ms"
-
-		the bad news:
-		that works out to 6.2 minutes!
-
-		the good news:
-		other processes ran just fine, and the browser waited the whole time
-	'''
+def job_status(job_num):			
 	
 	# start timer
 	stime = time.time()
@@ -167,10 +154,6 @@ def quickAddUser():
 	username = session['username']	
 	userPag = jobs.userPagGen(username)	
 
-	'''
-	The problem is here I think, each task 
-	'''
-
 	# instatiate jobHand object
 	jobPlatter = jobs.jobStart()
 	jobHand = jobPlatter['jobHand']
@@ -183,22 +166,46 @@ def quickAddUser():
 	jobStatusHand.estimated_tasks = (userPag.count - 1) #count is human readable, NOT length of list
 	while count < userPag.count:				
 		result = actions.quickAdd.delay(jobStatusHand, 41, 1, count)		
-		jobHand.assigned_tasks.append(str(result)) #COMMENTED OUT
+		jobHand.assigned_tasks.append(str(result)) 
 		print count, result				
 		count += 1				
 
 	# copy all tasks to pending
-	jobHand.pending_tasks = jobHand.assigned_tasks[:] #COMMENTED OUT
+	jobHand.pending_tasks = jobHand.assigned_tasks[:] 
 
 	print "Finished job #",jobHand.job_num		
 
 	# update job
-	jobs.jobUpdate(jobHand) #COMMENTED OUT
-
-	# TESTING OF CLASS METHODS
-	# jobHand.update()
+	jobs.jobUpdate(jobHand) 
 
 	return "You have initiated job {job_num}.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
+# Make the following: quickAddUser, longAddUser, PIDselectionUser
+@app.route("/quickAddUserFactory")
+def quickAddUserFactory():
+	print "Starting request..."
+	
+	username = session['username']	
+	userPag = jobs.userPagGen(username)	
+
+	# instatiate jobHand object
+	jobPlatter = jobs.jobStart()
+	jobHand = jobPlatter['jobHand']
+	jobStatusHand = jobPlatter['jobStatusHand']
+
+	# begin job
+	jobHand.estimated_tasks = userPag.count	
+	task_package = {		
+		"jobStatusHand":jobStatusHand,		
+		"a":41,
+		"b":1
+	}
+	result = actions.celeryTaskFactory.delay(username=username,task_name="quickAddFactory",task_function=actions.quickAddFactory,task_package=task_package)	
+
+	print "Finished job #",jobHand.job_num			
+
+	return "You have initiated job {job_num} via the Factory.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
 
