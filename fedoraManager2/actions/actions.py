@@ -39,10 +39,10 @@ def celeryTaskFactory(**kwargs):
 
 
 @celery.task()
-def taskv3(job_package):
+def sampleTask(job_package):
 
 	username = job_package['username']
-	print "Starting taskv3",job_package['step']		
+	print "Starting sampleTask",job_package['step']		
 
 	# delay
 	time.sleep(.25)
@@ -54,46 +54,6 @@ def taskv3(job_package):
 	# return results
 	return 40 + 2	
 
-
-# @celery.task()
-# def quickAdd(jobStatusHand,a,b,count):
-
-# 	# push to jobHand obj
-# 	# jobStatusHand.assigned_tasks.append(count) #added
-
-# 	print "Starting quickAdd:",count		
-	
-# 	jobStatusHand.completed_tasks.append(count) #added	
-
-# 	# update job	
-# 	jobs.jobStatusUpdate(jobStatusHand) #added
-
-# 	# and kick it out
-# 	time.sleep(.5)
-# 	return a + b
-
-# @celery.task()
-# def quickAddFactory(**kwargs):
-# 	username = kwargs['username']
-
-# 	# get selectedPIDs	
-# 	userPag = jobs.userPagGen(username)	
-# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
-# 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)
-
-# 	# run task by iterating through userPag (Paginator object)
-# 	step = 1
-# 	while step < userPag.count:
-# 		kwargs['task_package']['count'] = step
-# 		print "Starting quickAdd:",kwargs['task_package']['count']
-# 		print kwargs['task_package']['jobStatusHand']	
-# 		kwargs['task_package']['jobStatusHand'].completed_tasks.append(kwargs['task_package']['count']) #added	
-# 		# update job	
-# 		jobs.jobStatusUpdate(kwargs['task_package']['jobStatusHand']) #added
-# 		print "update successful"
-# 		# and kick it out
-# 		# time.sleep(.5)
-# 		step += 1	
 
 
 		

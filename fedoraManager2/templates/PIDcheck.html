@@ -1,7 +1,0 @@
-<h1>Welcome <span style="color:green;">{{username}}</span>, the PIDs you have requested!</h1>
-<ul>
-	{% for PID in cpage.object_list %}
-		<li>{{PID}}</li>
-	{% endfor %}
-</ul>
-<a href="/PIDcheck/{{username}}/{{pagenum - 1}}">Previous</a> / Page <strong>{{pagenum}}</strong> of {{p.num_pages}} / <a href="/PIDcheck/{{username}}/{{pagenum + 1}}">Next</a>
