@@ -1,3 +1,6 @@
 {% include 'header.html' %}
+{% if status_package.jobInit is defined %}
+	<p style="color:green; font-weight:bold;">Job #{{ status_package.job_num }} initiatied.</p>
+{% endif %}
 <p>Job Status for {{ status_package.job_num }}: {{ status_package.job_status }}<p>
 <p>{{ taskHand.last_completed_task_num }} / {{ taskHand.estimated_tasks }} tasks from job #{{ status_package.job_num }} completed.</p>

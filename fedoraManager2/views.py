@@ -70,10 +70,10 @@ def jobStatus(job_num):
 	taskHand.last_completed_task_num = len(taskHand.completed_tasks)
 
 	# DEBUG
-	print "length of jobHand assigned:", len(jobHand.assigned_tasks)
-	print "integer of jobHand estimated tasks:",int(jobHand.estimated_tasks)
-	print "taskHand.completed_tasks:",taskHand.completed_tasks
-	print "length of taskHand.completed_tasks:",len(taskHand.completed_tasks)	
+	# print "length of jobHand assigned:", len(jobHand.assigned_tasks)
+	# print "integer of jobHand estimated tasks:",int(jobHand.estimated_tasks)
+	# print "taskHand.completed_tasks:",taskHand.completed_tasks
+	# print "length of taskHand.completed_tasks:",len(taskHand.completed_tasks)	
 
 	# spooling, works on stable jobHand object
 	if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
@@ -96,6 +96,8 @@ def jobStatus(job_num):
 		print "Pending / Completion check took",ttime,"ms"
 
 	# render page
+	if request.args.get("jobInit","") == "true":
+		status_package['jobInit'] = "true"
 	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)		
 
 
@@ -166,9 +168,9 @@ def fireTask(task_name):
 	jobs.jobUpdate(jobHand)		
 	jobs.taskUpdate(taskHand)
 
-	print "Started job #",jobHand.job_num	
+	print "Started job #",jobHand.job_num
 
-	return "You have initiated job {job_num} via the Factory.  Click <a href='/jobStatus/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
 
 # WORKING NICELY
