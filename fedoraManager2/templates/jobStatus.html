@@ -1,2 +1,3 @@
 {% include 'header.html' %}
-<p>Job Status for {{status_package.job_num}}: {{status_package.job_status}}<p>
+<p>Job Status for {{ status_package.job_num }}: {{ status_package.job_status }}<p>
+<p>{{ taskHand.last_completed_task_num }} / {{ taskHand.estimated_tasks }} tasks from job #{{ status_package.job_num }} completed.</p>

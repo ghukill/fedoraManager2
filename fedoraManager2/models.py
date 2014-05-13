@@ -15,6 +15,7 @@ class taskBlob:
 		self.job_num = job_num		
 		self.estimated_tasks = ''
 		self.last_completed_task_num = 'pending'
+		self.completed_tasks = []
 
 
 			

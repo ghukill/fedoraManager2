@@ -2,6 +2,7 @@ from fedoraManager2 import app
 from fedoraManager2 import models
 from fedoraManager2.actions import actions
 
+
 # flask proper
 from flask import render_template, request, session, redirect
 
@@ -17,6 +18,7 @@ import json
 import pickle
 import sys
 import importlib
+import pprint
 
 # get celery instance / handle
 from cl.cl import celery
@@ -65,13 +67,25 @@ def jobStatus(job_num):
 	# get job
 	jobHand = jobs.jobGet(job_num)
 	taskHand = jobs.taskGet(job_num)
+	taskHand.last_completed_task_num = len(taskHand.completed_tasks)
+
+	# DEBUG
+	print "length of jobHand assigned:", len(jobHand.assigned_tasks)
+	print "integer of jobHand estimated tasks:",int(jobHand.estimated_tasks)
+	print "taskHand.completed_tasks:",taskHand.completed_tasks
+	print "length of taskHand.completed_tasks:",len(taskHand.completed_tasks)	
+
+	# spooling, works on stable jobHand object
+	if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
+		print "Job spooling..."
+		status_package['job_status'] = "spooling"
 
 	# check if pending jobs done
-	if taskHand.last_completed_task_num == "pending":
+	elif len(taskHand.completed_tasks) == 0:
 		print "Job Pending, waiting for others to complete.  Isn't that polite?"
 		status_package['job_status'] = "pending"		
 
-	if  taskHand.last_completed_task_num == taskHand.estimated_tasks:
+	elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
 		print "Job Complete!"
 		status_package['job_status'] = "complete"		
 
@@ -82,9 +96,7 @@ def jobStatus(job_num):
 		print "Pending / Completion check took",ttime,"ms"
 
 	# render page
-	return render_template("jobStatus.html",status_package=status_package)
-
-		# return "{completed} / {total} tasks from job #{job_num} completed.".format(completed=taskHand.last_completed_task_num,total=taskHand.estimated_tasks,job_num=job_num)
+	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)		
 
 
 
@@ -127,6 +139,8 @@ def fireTask(task_name):
 	jobHand = jobInit['jobHand']
 	taskHand = jobInit['taskHand']
 
+	job_num = jobHand.job_num
+
 	# begin job
 	print "Antipcating",userPag.count,"tasks...."
 	# push estimated tasks to jobHand and taskHand
@@ -136,8 +150,8 @@ def fireTask(task_name):
 	# create job_package
 	job_package = {		
 		"username":username,
-		"jobHand":jobHand,
-		"taskHand":taskHand
+		"job_num":job_num,
+		"jobHand":jobHand		
 	}
 
 	# grab task from actions based on URL "task_name" parameter, using getattr	
@@ -145,8 +159,8 @@ def fireTask(task_name):
 
 	# send to celeryTaskFactory in actions.py
 	# iterates through PIDs and creates secondary async tasks for each
-	# passing username, task_name, task_function as imported above, and job_package containing all the update handles	
-	result = actions.celeryTaskFactory.delay(task_name=task_name,task_function=task_function,job_package=job_package)
+	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
+	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
 
 	# preliminary update
 	jobs.jobUpdate(jobHand)		
