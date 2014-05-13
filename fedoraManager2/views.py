@@ -4,7 +4,7 @@ from fedoraManager2.actions import actions
 
 
 # flask proper
-from flask import render_template, request, session, redirect
+from flask import render_template, request, session, redirect, make_response
 
 # forms
 from flask_wtf import Form
@@ -95,7 +95,20 @@ def jobStatus(job_num):
 		ttime = (etime - stime) * 1000
 		print "Pending / Completion check took",ttime,"ms"
 
-	# render page
+	# data return 
+	if request.args.get("data","") == "true":
+		response_dict = {
+			"job_status":status_package['job_status'],
+			"completed_tasks":len(taskHand.completed_tasks),
+			"estimated_tasks":taskHand.estimated_tasks
+		}
+		json_string = json.dumps(response_dict)
+		print json_string
+		resp = make_response(json_string)
+		resp.headers['Content-Type'] = 'application/json'
+		return resp
+
+	# render huam npage
 	if request.args.get("jobInit","") == "true":
 		status_package['jobInit'] = "true"
 	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)		
