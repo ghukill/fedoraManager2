@@ -21,3 +21,14 @@ Code Snippets
 ---------------------------
 For PIDcheck.html, making pages
 {% for page in p.page_range %} <a href="/PIDcheck/{{username}}/{{page}}">{{page}}</a> {% endfor %}
+
+
+Big Questions
+---------------------------
+
+I'm wondering if a job can simply be one enormous celery task, that as it runs, updates a status object in Redis?
+This would seem to make a LOT more sense
+Perceived cons at one point was loss of granularity
+
+What if it detected the number of jobs to be run, and acted accordingly?  
+We'll just have to see.

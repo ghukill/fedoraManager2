@@ -16,6 +16,7 @@ import time
 import json
 import pickle
 import sys
+import importlib
 
 # get celery instance / handle
 from cl.cl import celery
@@ -37,70 +38,71 @@ def index():
 	
 
 
-@app.route("/task_status/<task_id>")
-def task_status(task_id):
+# @app.route("/task_status/<task_id>")
+# def task_status(task_id):
 	
-	# global way to surgically pick task out of celery memory		
-	result = actions.celery.AsyncResult(task_id)	
-	state, retval = result.state, result.result
-	response_data = dict(id=task_id, status=state, result=retval)
+# 	# global way to surgically pick task out of celery memory		
+# 	result = actions.celery.AsyncResult(task_id)	
+# 	state, retval = result.state, result.result
+# 	response_data = dict(id=task_id, status=state, result=retval)
 	
-	return json.dumps(response_data)
+# 	return json.dumps(response_data)
 
 
-	return "You are looking for {task_id}".format(task_id=task_id)	
+# 	return "You are looking for {task_id}".format(task_id=task_id)	
 
 
 
-@app.route("/job_status/<job_num>")
-def job_status(job_num):			
+# @app.route("/job_status/<job_num>")
+# def job_status(job_num):			
 	
-	# start timer
-	stime = time.time()
+# 	# start timer
+# 	stime = time.time()
 
-	# get job
-	jobHand = jobs.jobGet(job_num)['jobHand']
-	jobHandStatus = jobs.jobGet(job_num)['jobStatusHand']
+# 	# get job
+# 	jobHand = jobs.jobGet(job_num)['jobHand']
+# 	jobHandStatus = jobs.jobGet(job_num)['jobStatusHand']
 
-	# check if pending jobs done
-	if len(jobHand.pending_tasks) == 0:
-		return "Job Complete!"
+# 	# check if pending jobs done
+# 	if len(jobHand.pending_tasks) == 0:
+# 		return "Job Complete!"
 	
-	# check if job has started at all!
-	job_start_result = celery.AsyncResult(jobHand.assigned_tasks[0])				
-	state = job_start_result.state
-	print "Checking if job started..."
-	if state == "PENDING":
-		print "Job Pending."
-		return "Job Pending, waiting for others to complete.  Isn't that polite?"
+# 	# check if job has started at all!
+# 	job_start_result = celery.AsyncResult(jobHand.assigned_tasks[0])				
+# 	state = job_start_result.state
+# 	print "Checking if job started..."
+# 	if state == "PENDING":
+# 		print "Job Pending."
+# 		return "Job Pending, waiting for others to complete.  Isn't that polite?"
 
-	# else, check all pending jobs
-	print "Pre routing length of pending list",len(jobHand.pending_tasks)	
-	pending_worker = jobHand.pending_tasks[:] 
-	for task in pending_worker:		
-		result = celery.AsyncResult(task)				
-		state = result.state
-		print "Checking task:",task,"/ State:",state
+# 	# else, check all pending jobs
+# 	print "Pre routing length of pending list",len(jobHand.pending_tasks)	
+# 	pending_worker = jobHand.pending_tasks[:] 
+# 	for task in pending_worker:		
+# 		result = celery.AsyncResult(task)				
+# 		state = result.state
+# 		print "Checking task:",task,"/ State:",state
 		
-		# route based on state
-		if state == "SUCCESS":
-			jobHand.pending_tasks.remove(task)
-			jobHand.completed_tasks.append(task)		
+# 		# route based on state
+# 		if state == "SUCCESS":
+# 			jobHand.pending_tasks.remove(task)
+# 			jobHand.completed_tasks.append(task)		
 
-	print "POST routing length of pending list",len(jobHand.pending_tasks)
+# 	print "POST routing length of pending list",len(jobHand.pending_tasks)
 
-	etime = time.time()
-	ttime = (etime - stime) * 1000
-	print "Pending / Completion check took",ttime,"ms"	
+# 	etime = time.time()
+# 	ttime = (etime - stime) * 1000
+# 	print "Pending / Completion check took",ttime,"ms"	
 
-	# update job
-	jobs.jobUpdate(jobHand)	
+# 	# update job
+# 	jobs.jobUpdate(jobHand)	
 
-	# check status	
-	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
+# 	# check status	
+# 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
+
 
 @app.route("/job_statusv2/<job_num>")
-def job_statusv2(job_num):		
+def job_status(job_num):		
 	
 	# start timer
 	stime = time.time()
@@ -110,12 +112,13 @@ def job_statusv2(job_num):
 	jobStatusHand = jobs.jobGet(job_num)['jobStatusHand']
 
 	# check if pending jobs done
-	if  jobStatusHand.completed_tasks[0] == jobStatusHand.estimated_tasks:
-		return "Job Complete!"
-	
+
 	if len(jobStatusHand.completed_tasks) < 1:
 		print "Job Pending, waiting for others to complete.  Isn't that polite?"
 		return "Job Pending, waiting for others to complete.  Isn't that polite?"
+
+	if  jobStatusHand.completed_tasks[0] == jobStatusHand.estimated_tasks:
+		return "Job Complete!"	
 
 	etime = time.time()
 	ttime = (etime - stime) * 1000
@@ -123,6 +126,7 @@ def job_statusv2(job_num):
 
 	# check status	
 	return "{completed} / {total} Completed.".format(completed=jobStatusHand.completed_tasks[0],total=jobStatusHand.estimated_tasks)
+
 
 
 # Session Testing
@@ -146,69 +150,158 @@ def userPage(username):
 	userData['username'] = username
 	return render_template("userPage.html",userData=userData)
 
-# Make the following: quickAddUser, longAddUser, PIDselectionUser
-@app.route("/quickAddUser")
-def quickAddUser():
-	print "Starting request..."
+
+
+# # Make the following: quickAddUser, longAddUser, PIDselectionUser
+# @app.route("/quickAddUser")
+# def quickAddUser():
+# 	print "Starting request..."
 	
+# 	username = session['username']	
+# 	userPag = jobs.userPagGen(username)	
+
+# 	# instatiate jobHand object
+# 	jobPlatter = jobs.jobStart()
+# 	jobHand = jobPlatter['jobHand']
+# 	jobStatusHand = jobPlatter['jobStatusHand']
+
+# 	# begin job
+# 	count = 1
+# 	print "Antipcating",userPag.count,"tasks...."
+# 	jobHand.estimated_tasks = userPag.count	
+# 	jobStatusHand.estimated_tasks = (userPag.count - 1) #count is human readable, NOT length of list
+# 	while count < userPag.count:				
+# 		result = actions.quickAdd.delay(jobStatusHand, 41, 1, count)		
+# 		jobHand.assigned_tasks.append(str(result)) 
+# 		print count, result				
+# 		count += 1				
+
+# 	# copy all tasks to pending
+# 	jobHand.pending_tasks = jobHand.assigned_tasks[:] 
+
+# 	print "Finished job #",jobHand.job_num		
+
+# 	# update job
+# 	jobs.jobUpdate(jobHand) 
+
+# 	return "You have initiated job {job_num}.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
+
+# @app.route("/quickAddUserFactory")
+# def quickAddUserFactory():
+# 	print "Starting request..."
+	
+# 	username = session['username']	
+# 	userPag = jobs.userPagGen(username)	
+
+# 	# instatiate jobHand object
+# 	jobPlatter = jobs.jobStart()
+# 	jobHand = jobPlatter['jobHand']
+# 	jobStatusHand = jobPlatter['jobStatusHand']
+
+# 	# begin job
+# 	print "Antipcating",userPag.count,"tasks...."
+# 	jobHand.estimated_tasks = userPag.count	
+# 	jobStatusHand.estimated_tasks = (userPag.count - 1) #count is human readable, NOT length of list
+# 	task_package = {		
+# 		"jobStatusHand":jobStatusHand,		
+# 		"a":41,
+# 		"b":1
+# 	}
+# 	result = actions.celeryTaskFactory.delay(username=username,task_name="quickAddFactory",task_function=actions.quickAddFactory,task_package=task_package)	
+
+# 	print "Finished job #",jobHand.job_num	
+
+# 	# update job
+# 	jobs.jobUpdate(jobHand)		
+# 	jobs.jobStatusUpdate(jobStatusHand)
+
+# 	return "You have initiated job {job_num} via the Factory.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
+
+# # Make the following: quickAddUser, longAddUser, PIDselectionUser
+# @app.route("/singleTask")
+# def quickAddUser():
+# 	print "Starting request..."
+	
+# 	username = session['username']	
+# 	userPag = jobs.userPagGen(username)	
+
+# 	# instatiate jobHand object
+# 	jobPlatter = jobs.jobStart()
+# 	jobHand = jobPlatter['jobHand']
+# 	jobStatusHand = jobPlatter['jobStatusHand']
+
+# 	# begin job
+# 	print "Antipcating",userPag.count,"tasks...."
+# 	jobHand.estimated_tasks = userPag.count	
+# 	jobStatusHand.estimated_tasks = (userPag.count - 1) #count is human readable, NOT length of list
+# 	task_package = {		
+# 		"jobStatusHand":jobStatusHand,		
+# 		"a":41,
+# 		"b":1
+# 	}
+
+# 	result = actions.quickAddFactory.delay(username=username,task_package=task_package)	
+
+# 	print "Started job #",jobHand.job_num	
+
+# 	# update job
+# 	jobs.jobUpdate(jobHand)		
+# 	jobs.jobStatusUpdate(jobStatusHand)
+
+# 	return "You have initiated job {job_num} via the Factory.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+
+
+@app.route("/fireTask/<task_name>")
+def fireTask(task_name):
+	print "Starting taskv3 request..."
+	
+	# get username from session (will pull from user auth session later)
 	username = session['username']	
+	# generate userPag (Pagination object) of user's selected PIDs
 	userPag = jobs.userPagGen(username)	
 
-	# instatiate jobHand object
-	jobPlatter = jobs.jobStart()
-	jobHand = jobPlatter['jobHand']
-	jobStatusHand = jobPlatter['jobStatusHand']
+	# instatiate jobHand object with incrementing job_num
+	jobInit = jobs.jobStart()
+	jobHand = jobInit['jobHand']
+	taskHand = jobInit['taskHand']
 
 	# begin job
-	count = 1
 	print "Antipcating",userPag.count,"tasks...."
-	jobHand.estimated_tasks = userPag.count	
-	jobStatusHand.estimated_tasks = (userPag.count - 1) #count is human readable, NOT length of list
-	while count < userPag.count:				
-		result = actions.quickAdd.delay(jobStatusHand, 41, 1, count)		
-		jobHand.assigned_tasks.append(str(result)) 
-		print count, result				
-		count += 1				
-
-	# copy all tasks to pending
-	jobHand.pending_tasks = jobHand.assigned_tasks[:] 
-
-	print "Finished job #",jobHand.job_num		
-
-	# update job
-	jobs.jobUpdate(jobHand) 
-
-	return "You have initiated job {job_num}.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
-
-
-# Make the following: quickAddUser, longAddUser, PIDselectionUser
-@app.route("/quickAddUserFactory")
-def quickAddUserFactory():
-	print "Starting request..."
+	# push estimated tasks to jobHand and taskHand
+	jobHand.estimated_tasks = userPag.count
+	taskHand.estimated_tasks = userPag.count
 	
-	username = session['username']	
-	userPag = jobs.userPagGen(username)	
-
-	# instatiate jobHand object
-	jobPlatter = jobs.jobStart()
-	jobHand = jobPlatter['jobHand']
-	jobStatusHand = jobPlatter['jobStatusHand']
-
-	# begin job
-	jobHand.estimated_tasks = userPag.count	
-	task_package = {		
-		"jobStatusHand":jobStatusHand,		
-		"a":41,
-		"b":1
+	# create job_package
+	job_package = {		
+		"username":username,
+		"jobHand":jobHand,
+		"taskHand":taskHand
 	}
-	result = actions.celeryTaskFactory.delay(username=username,task_name="quickAddFactory",task_function=actions.quickAddFactory,task_package=task_package)	
 
-	print "Finished job #",jobHand.job_num			
+	# grab task from actions based on URL "task_name" parameter, using getattr	
+	task_function = getattr(actions, task_name)
+
+	# send to celeryTaskFactory in actions.py
+	# iterates through PIDs and creates secondary async tasks for each
+	# passing username, task_name, task_function as imported above, and job_package containing all the update handles
+	# result = actions.celeryTaskFactory.delay(username=username,task_name=task_name,task_function=task_function,job_package=job_package)
+	result = actions.celeryTaskFactory.delay(task_name=task_name,task_function=task_function,job_package=job_package)
+
+	# preliminary update
+	jobs.jobUpdate(jobHand)		
+	jobs.taskUpdate(taskHand)
+
+	print "Started job #",jobHand.job_num	
 
 	return "You have initiated job {job_num} via the Factory.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
-
+# WORKING NICELY
+########################################################################################
 # PID selection sandboxing
 @app.route("/PIDselectionUser", methods=['POST', 'GET'])
 def PIDselectionUser():
@@ -222,6 +315,7 @@ def PIDselectionUser():
 		return redirect("/PIDcheckUser/1".format(username=username))
 		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
 	return render_template('PIDformUser.html', username=username, form=form)
+
 
 # PID check for user
 @app.route("/PIDcheckUser/<pagenum>")

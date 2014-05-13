@@ -10,68 +10,93 @@ import sys
 
 @celery.task()
 def celeryTaskFactory(**kwargs):
-	username = kwargs['username']
+	
+	# create job_package
+	job_package = kwargs['job_package']
 
 	# get selectedPIDs	
-	userPag = jobs.userPagGen(username)	
-	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
-	print "Paginator is",sys.getsizeof(userPag),"bytes"
-	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)
+	userPag = jobs.userPagGen(job_package['username'])	
+	print "Found {count} PIDs for {username}".format(count=userPag.count,username=job_package['username'])	
 
 	# run task by iterating through userPag (Paginator object)
 	step = 1
 	while step < userPag.count:
-		kwargs['task_package']['count'] = step
-		print "Firing off celery task",step
-		
-		####################################################################################################
-		# HOW TO RUN FUNCTION FROM THIS FILE, WITH .delay() USING IT AS A KEYWORD?  IS THAT POSSIBLE?  
-		####################################################################################################
-
-		# need this to work...
-		# result = funcHandle(kwargs['task_package']).delay()
-		result = kwargs['task_function'].delay(kwargs['task_package'])
-		# works, but not really possible
-		# result = quickAddFactory.delay()
-
-		# push to jobHand
-		# task_package['jobHand'].assigned_tasks.append(str(result))		
-
+		job_package['step'] = step
+		print "Firing off task:",step		
+		# result = kwargs['task_function'].delay(kwargs['job_package'])				
+		result = kwargs['task_function'].delay(job_package)				
 		step += 1
 
 
 @celery.task()
-def quickAdd(jobStatusHand,a,b,count):
+def taskv3(job_package):
 
-	# push to jobHand obj
-	# jobStatusHand.assigned_tasks.append(count) #added
+	username = job_package['username']
+	print "Starting taskv3",job_package['step']		
 
-	print "Starting quickAdd:",count		
+	# delay
+	time.sleep(.25)
 	
-	jobStatusHand.completed_tasks.append(count) #added	
-
-	# update job	
-	jobs.jobStatusUpdate(jobStatusHand) #added
-
-	# and kick it out
-	time.sleep(.5)
-	return a + b
-
-@celery.task()
-def quickAddFactory(task_package):	
-
-	print "Starting quickAdd:",task_package['count']
+	# return results
+	return 40 + 2	
 
 
-	print task_package['jobStatusHand']
+# @celery.task()
+# def quickAdd(jobStatusHand,a,b,count):
 
+# 	# push to jobHand obj
+# 	# jobStatusHand.assigned_tasks.append(count) #added
+
+# 	print "Starting quickAdd:",count		
 	
-	task_package['jobStatusHand'].completed_tasks.append(task_package['count']) #added	
+# 	jobStatusHand.completed_tasks.append(count) #added	
 
-	# update job	
-	jobs.jobStatusUpdate(task_package['jobStatusHand']) #added
+# 	# update job	
+# 	jobs.jobStatusUpdate(jobStatusHand) #added
 
-	# and kick it out
-	time.sleep(.5)
-	return task_package['a'] + task_package['b']
+# 	# and kick it out
+# 	time.sleep(.5)
+# 	return a + b
+
+# @celery.task()
+# def quickAddFactory(**kwargs):
+# 	username = kwargs['username']
+
+# 	# get selectedPIDs	
+# 	userPag = jobs.userPagGen(username)	
+# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
+# 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)
+
+# 	# run task by iterating through userPag (Paginator object)
+# 	step = 1
+# 	while step < userPag.count:
+# 		kwargs['task_package']['count'] = step
+# 		print "Starting quickAdd:",kwargs['task_package']['count']
+# 		print kwargs['task_package']['jobStatusHand']	
+# 		kwargs['task_package']['jobStatusHand'].completed_tasks.append(kwargs['task_package']['count']) #added	
+# 		# update job	
+# 		jobs.jobStatusUpdate(kwargs['task_package']['jobStatusHand']) #added
+# 		print "update successful"
+# 		# and kick it out
+# 		# time.sleep(.5)
+# 		step += 1	
+
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

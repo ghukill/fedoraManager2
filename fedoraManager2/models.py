@@ -1,9 +1,16 @@
 
-# dp
-import pickle
 
-class jobBlob:	
 
+class jobBlob:
+	def __init__(self, job_num):
+		self.job_num = job_num
+		self.estimated_tasks = ''
+		self.assigned_tasks = []
+		self.pending_tasks = []
+		self.completed_tasks = []
+		self.error_tasks = []
+
+class taskBlob:
 	def __init__(self, job_num):
 		self.job_num = job_num
 		self.estimated_tasks = ''
