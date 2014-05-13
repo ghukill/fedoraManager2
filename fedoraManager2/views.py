@@ -101,31 +101,60 @@ def index():
 # 	return "{completed} / {total} Completed.".format(completed=len(jobHand.completed_tasks),total=len(jobHand.assigned_tasks))
 
 
-@app.route("/job_statusv2/<job_num>")
-def job_status(job_num):		
+# @app.route("/job_statusv2/<job_num>")
+# def job_status(job_num):		
+	
+# 	# start timer
+# 	stime = time.time()
+
+# 	# get job
+# 	jobHand = jobs.jobGet(job_num)['jobHand']
+# 	jobStatusHand = jobs.jobGet(job_num)['jobStatusHand']
+
+# 	# check if pending jobs done
+
+# 	if len(jobStatusHand.completed_tasks) < 1:
+# 		print "Job Pending, waiting for others to complete.  Isn't that polite?"
+# 		return "Job Pending, waiting for others to complete.  Isn't that polite?"
+
+# 	if  jobStatusHand.completed_tasks[0] == jobStatusHand.estimated_tasks:
+# 		return "Job Complete!"	
+
+# 	etime = time.time()
+# 	ttime = (etime - stime) * 1000
+# 	print "Pending / Completion check took",ttime,"ms"
+
+# 	# check status	
+# 	return "{completed} / {total} Completed.".format(completed=jobStatusHand.completed_tasks[0],total=jobStatusHand.estimated_tasks)
+
+
+
+@app.route("/jobStatusv3/<job_num>")
+def jobStatusv3(job_num):		
 	
 	# start timer
 	stime = time.time()
 
 	# get job
-	jobHand = jobs.jobGet(job_num)['jobHand']
-	jobStatusHand = jobs.jobGet(job_num)['jobStatusHand']
+	jobHand = jobs.jobGet(job_num)
+	taskHand = jobs.taskGet(job_num)
 
 	# check if pending jobs done
-
-	if len(jobStatusHand.completed_tasks) < 1:
+	if taskHand.last_completed_task_num == "pending":
 		print "Job Pending, waiting for others to complete.  Isn't that polite?"
 		return "Job Pending, waiting for others to complete.  Isn't that polite?"
 
-	if  jobStatusHand.completed_tasks[0] == jobStatusHand.estimated_tasks:
+	if  taskHand.last_completed_task_num == taskHand.estimated_tasks:
+		print "Job Complete!"
 		return "Job Complete!"	
 
-	etime = time.time()
-	ttime = (etime - stime) * 1000
-	print "Pending / Completion check took",ttime,"ms"
+	else:
+		etime = time.time()
+		ttime = (etime - stime) * 1000
+		print "Pending / Completion check took",ttime,"ms"
 
-	# check status	
-	return "{completed} / {total} Completed.".format(completed=jobStatusHand.completed_tasks[0],total=jobStatusHand.estimated_tasks)
+		# check status	
+		return "{completed} / {total} tasks from job #{job_num} completed.".format(completed=taskHand.last_completed_task_num,total=taskHand.estimated_tasks,job_num=job_num)
 
 
 
@@ -297,7 +326,7 @@ def fireTask(task_name):
 
 	print "Started job #",jobHand.job_num	
 
-	return "You have initiated job {job_num} via the Factory.  Click <a href='/job_statusv2/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
+	return "You have initiated job {job_num} via the Factory.  Click <a href='/jobStatusv3/{job_num}'>here</a> to check it foo.".format(job_num=jobHand.job_num)
 
 
 # WORKING NICELY

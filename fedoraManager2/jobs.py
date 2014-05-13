@@ -24,20 +24,18 @@ def jobStart():
 	return {"jobHand":jobHand,"taskHand":taskHand}
 
 
-def jobUpdate(jobHand):	
-
+def jobUpdate(jobHand):
 	jobHand_pickled = pickle.dumps(jobHand)
 	r_job_handle.set("job_{job_num}".format(job_num=jobHand.job_num),jobHand_pickled)
 
 def taskUpdate(taskHand):		
-		
 	taskHand_pickled = pickle.dumps(taskHand)				
 	r_job_handle.set("taskStatus_{job_num}".format(job_num=taskHand.job_num),taskHand_pickled)	
 
-def jobGet(job_num):
-	# retrieving and unpickling from redis	
+def jobGet(job_num):	
 	jobHand_pickled = r_job_handle.get("job_{job_num}".format(job_num=job_num))
 	jobHand = pickle.loads(jobHand_pickled)	
+	return jobHand
 
 def taskGet(job_num):
 	taskHand_pickled = r_job_handle.get("taskStatus_{job_num}".format(job_num=job_num))

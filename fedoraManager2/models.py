@@ -12,12 +12,9 @@ class jobBlob:
 
 class taskBlob:
 	def __init__(self, job_num):
-		self.job_num = job_num
+		self.job_num = job_num		
 		self.estimated_tasks = ''
-		self.assigned_tasks = []
-		self.pending_tasks = []
-		self.completed_tasks = []
-		self.error_tasks = []
+		self.last_completed_task_num = 'pending'
 
 
 			
