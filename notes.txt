@@ -3,6 +3,8 @@ Dependencies
 zato-redis-paginator
 	https://github.com/zatosource/zato-redis-paginator
 python-redis
+apt-get install python-sqlalchemy
+apt-get install python-mysqldb
 
 
 
@@ -13,6 +15,22 @@ db 0 = celery broker
 db 1 = celery results
 db 2 = job status / results
 db 3 = user selected PIDs
+
+
+SQL
+---------------------------
+database = "fedoraManager2"
+superuser = fm2
+superuser password = fm2
+
+
+Libraries to research
+---------------------------
+This looks promising for assets: http://flask-assets.readthedocs.org/en/latest/
+Look into pushing PIDs to SQL
+
+
+
 
 
 

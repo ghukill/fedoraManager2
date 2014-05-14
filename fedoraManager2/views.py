@@ -1,10 +1,12 @@
 from fedoraManager2 import app
 from fedoraManager2 import models
+from fedoraManager2 import db
 from fedoraManager2.actions import actions
 
 
 # flask proper
 from flask import render_template, request, session, redirect, make_response
+from flask.ext.sqlalchemy import SQLAlchemy
 
 # forms
 from flask_wtf import Form
@@ -52,6 +54,83 @@ def index():
 
 
 # 	return "You are looking for {task_id}".format(task_id=task_id)	
+
+
+		
+
+
+
+# Session Testing
+@app.route("/sessionSet/<username>")
+def sessionSet(name):	
+	session['username'] = username
+	return "You have changed the session username to {username}.".format(username=username)
+
+@app.route("/sessionCheck")
+def sessionCheck():		
+	username = session['username']
+	return "You have retrieved the session username {username}.".format(username=username)
+
+@app.route('/userPage/<username>')
+def userPage(username):
+	# set username in session
+	session['username'] = username	
+
+	# info to render page
+	userData = {}
+	userData['username'] = username
+	return render_template("userPage.html",userData=userData)
+
+# JOB MANAGEMENT
+#########################################################################################################
+
+
+# fireTask is the factory that begins tasks from fedoraManager2.actions
+# epecting task function name from actions module, e.g. "sampleTask"
+@app.route("/fireTask/<task_name>")
+def fireTask(task_name):
+	print "Starting taskv3 request..."
+	
+	# get username from session (will pull from user auth session later)
+	username = session['username']	
+	# generate userPag (Pagination object) of user's selected PIDs
+	userPag = jobs.userPagGen(username)	
+
+	# instatiate jobHand object with incrementing job_num
+	jobInit = jobs.jobStart()
+	jobHand = jobInit['jobHand']
+	taskHand = jobInit['taskHand']
+
+	job_num = jobHand.job_num
+
+	# begin job
+	print "Antipcating",userPag.count,"tasks...."
+	# push estimated tasks to jobHand and taskHand
+	jobHand.estimated_tasks = userPag.count
+	taskHand.estimated_tasks = userPag.count
+	
+	# create job_package
+	job_package = {		
+		"username":username,
+		"job_num":job_num,
+		"jobHand":jobHand		
+	}
+
+	# grab task from actions based on URL "task_name" parameter, using getattr	
+	task_function = getattr(actions, task_name)
+
+	# send to celeryTaskFactory in actions.py
+	# iterates through PIDs and creates secondary async tasks for each
+	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
+	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
+
+	# preliminary update
+	jobs.jobUpdate(jobHand)		
+	jobs.taskUpdate(taskHand)
+
+	print "Started job #",jobHand.job_num
+
+	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
 
 @app.route("/jobStatus/<job_num>")
@@ -108,86 +187,14 @@ def jobStatus(job_num):
 		resp.headers['Content-Type'] = 'application/json'
 		return resp
 
-	# render huam npage
+	# render human page (this will probably go the way of the dodo with jobs dashboard)
 	if request.args.get("jobInit","") == "true":
 		status_package['jobInit'] = "true"
-	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)		
+	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)
 
 
-
-# Session Testing
-@app.route("/sessionSet/<username>")
-def sessionSet(name):	
-	session['username'] = username
-	return "You have changed the session username to {username}.".format(username=username)
-
-@app.route("/sessionCheck")
-def sessionCheck():		
-	username = session['username']
-	return "You have retrieved the session username {username}.".format(username=username)
-
-@app.route('/userPage/<username>')
-def userPage(username):
-	# set username in session
-	session['username'] = username	
-
-	# info to render page
-	userData = {}
-	userData['username'] = username
-	return render_template("userPage.html",userData=userData)
-
-
-
-# fireTask is the factory that begins tasks from fedoraManager2.actions
-# epecting task function name from actions module, e.g. "sampleTask"
-@app.route("/fireTask/<task_name>")
-def fireTask(task_name):
-	print "Starting taskv3 request..."
-	
-	# get username from session (will pull from user auth session later)
-	username = session['username']	
-	# generate userPag (Pagination object) of user's selected PIDs
-	userPag = jobs.userPagGen(username)	
-
-	# instatiate jobHand object with incrementing job_num
-	jobInit = jobs.jobStart()
-	jobHand = jobInit['jobHand']
-	taskHand = jobInit['taskHand']
-
-	job_num = jobHand.job_num
-
-	# begin job
-	print "Antipcating",userPag.count,"tasks...."
-	# push estimated tasks to jobHand and taskHand
-	jobHand.estimated_tasks = userPag.count
-	taskHand.estimated_tasks = userPag.count
-	
-	# create job_package
-	job_package = {		
-		"username":username,
-		"job_num":job_num,
-		"jobHand":jobHand		
-	}
-
-	# grab task from actions based on URL "task_name" parameter, using getattr	
-	task_function = getattr(actions, task_name)
-
-	# send to celeryTaskFactory in actions.py
-	# iterates through PIDs and creates secondary async tasks for each
-	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
-	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
-
-	# preliminary update
-	jobs.jobUpdate(jobHand)		
-	jobs.taskUpdate(taskHand)
-
-	print "Started job #",jobHand.job_num
-
-	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
-
-
-# WORKING NICELY
-########################################################################################
+# PID MANAGEMENT
+####################################################################################
 # PID selection sandboxing
 @app.route("/PIDselectionUser", methods=['POST', 'GET'])
 def PIDselectionUser():
@@ -195,17 +202,37 @@ def PIDselectionUser():
 	username = session['username']
 	form = forms.PIDselection(request.form)
 	if request.method == 'POST':		
-		PID = form.PID.data		
-		# send PIDs to Redis
+		PID = form.PID.data				
 		jobs.sendSelectedPIDs(username,PID)
-		return redirect("/PIDcheckUser/1".format(username=username))
+		return redirect("/PIDmanage/1".format(username=username))
 		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
-	return render_template('PIDformUser.html', username=username, form=form)
+	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
+
+@app.route("/PIDselectionSQL", methods=['POST', 'GET'])
+def PIDselectionSQL():
+	'''
+	Here's where we are with SQL.
+	1) we have a handle "db" for the SQLalchemy, this will be useful for creating and possibly updating rows
+	2) hell, this might be handy for querying as well!
+
+	3) but we ALSO have a raw handle "db_con" which we can issue commands like this:
+		goober = db_con.execute("SELECT * from selectedPID")
+		goober.first()
+		>> (1L, 'wayne:CFAIEByadda')
+	'''
+
+	print dir(models.selectedPID)
+	goober = models.selectedPID("wayne:CFAIEByadda")
+	db.session.add(goober)
+	db.session.commit()
+	allPIDs = models.selectedPID.query.all()	
+	print allPIDs
+	return allPIDs
 
 
 # PID check for user
-@app.route("/PIDcheckUser/<pagenum>")
-def PIDcheckUser(pagenum):
+@app.route("/PIDmanage/<pagenum>")
+def PIDmanage(pagenum):
 	# start timer
 	stime = time.time()
 
@@ -225,7 +252,58 @@ def PIDcheckUser(pagenum):
 	print "PID retrieval took",ttime,"ms"	
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDcheckUser.html",cpage_PIDs=cpage.object_list,username=username,userPag=userPag,cpage=cpage,pagenum=int(pagenum))
+	return render_template("PIDmanage.html",cpage_PIDs=cpage.object_list,username=username,userPag=userPag,cpage=cpage,pagenum=int(pagenum))
+
+# PID check for user
+@app.route("/PIDmanage_data",methods=['POST', 'GET'])
+def PIDmanage_data():
+	response_dict = {
+  "draw": 1,
+  "recordsTotal": 10,
+  "recordsFiltered": 10,
+  "start":0,
+  "length":10,
+  "data": [
+    [
+      "Airi",      
+    ],
+    [
+      "Angelica",      
+    ],
+    [
+      "Ashton",      
+    ],
+    [
+      "Bradley",      
+    ],
+    [
+      "Brenden",      
+    ],
+    [
+      "Brielle",      
+    ],
+    [
+      "Bruno",      
+    ],
+    [
+      "Caesar",      
+    ],
+    [
+      "Cara",      
+    ],
+    [
+      "Cedric",      
+    ]
+  ]
+}	
+	json_string = json.dumps(response_dict)	
+	resp = make_response(json_string)
+	resp.headers['Content-Type'] = 'application/json'
+	return resp
+
+
+
+
 
 # Catch all - DON'T REMOVE
 @app.route('/', defaults={'path': ''})

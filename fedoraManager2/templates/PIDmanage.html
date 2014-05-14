@@ -1,0 +1,31 @@
+{% include 'header.html' %}
+
+<!-- test js load -->
+<!-- <script type="text/javascript" src="{{ url_for('static',filename='PIDmanage.js')}}"></script> -->
+<script type="text/javascript" src="/static/PIDmanage.js"></script>
+
+
+<h1>Welcome <span style="color:green;">{{username}}</span>, the PIDs you have requested!</h1>
+<ul>
+	{% for PID in cpage.object_list %}
+		<li>{{PID}}</li>
+	{% endfor %}
+</ul>
+<a href="/PIDmanage/1">Previousest</a> <a href="/PIDmanage/{{pagenum - 1}}">Previous</a> / Page <strong>{{pagenum}}</strong> of {{userPag.num_pages}} / <a href="/PIDmanage/{{pagenum + 1}}">Next</a> <a href="/PIDmanage/{{userPag.num_pages}}">Nextest</a>
+</br>
+</br>
+</br>
+</br>
+
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>PID</th>            
+        </tr>
+    </thead>
+    
+</table>
+
+
+
+{% include 'footer.html' %}

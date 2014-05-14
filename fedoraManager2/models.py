@@ -1,4 +1,4 @@
-
+from fedoraManager2 import db
 
 
 class jobBlob:
@@ -18,4 +18,13 @@ class taskBlob:
 		self.completed_tasks = []
 
 
-			
+
+class selectedPID(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    PID = db.Column(db.String(120), unique=True)    
+
+    def __init__(self, PID):
+        self.PID = PID        
+
+    def __repr__(self):
+        return '<PID %r>' % self.PID
