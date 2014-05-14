@@ -235,10 +235,6 @@ def PIDselectionSQL():
 	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
 
 
-
-	
-
-
 # PID check for user
 @app.route("/PIDmanage/<pagenum>")
 def PIDmanage(pagenum):

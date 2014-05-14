@@ -67,15 +67,15 @@ def userPagGen(username):
 
 # PID selection - SQL style
 ############################################################################################################
-def sendSelectedPIDs(username,PIDs):
-	print "Storing selected PIDs for {username}".format(username=username)				
-	for PID in PIDs:
-		db.session.add(models.selectedPID(PID))	
-	db.session.commit() # a failed commit while fail the whole lot
-	print "PIDs stored"	
+# def sendSelectedPIDs(username,PIDs):
+# 	print "Storing selected PIDs for {username}".format(username=username)				
+# 	for PID in PIDs:
+# 		db.session.add(models.selectedPID(PID))	
+# 	db.session.commit() # a failed commit while fail the whole lot
+# 	print "PIDs stored"	
 
-def userPagGen(username):
-	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+# def userPagGen(username):
+# 	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
 
 
 
