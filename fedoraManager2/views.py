@@ -208,6 +208,7 @@ def PIDselectionUser():
 		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
 	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
 
+
 @app.route("/PIDselectionSQL", methods=['POST', 'GET'])
 def PIDselectionSQL():
 	'''
@@ -221,13 +222,21 @@ def PIDselectionSQL():
 		>> (1L, 'wayne:CFAIEByadda')
 	'''
 
-	print dir(models.selectedPID)
-	goober = models.selectedPID("wayne:CFAIEByadda")
-	db.session.add(goober)
-	db.session.commit()
-	allPIDs = models.selectedPID.query.all()	
-	print allPIDs
-	return allPIDs
+	# get username from session
+	username = session['username']
+	form = forms.PIDselection(request.form)
+
+	if request.method == 'POST':		
+		PID = form.PID.data				
+		jobs.sendSelectedPIDs(username,PID)				
+		return "PIDs have been added via MySQL"	
+		
+
+	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
+
+
+
+	
 
 
 # PID check for user
