@@ -51,31 +51,35 @@ def taskGet(job_num):
 
 # PID selection
 ############################################################################################################
-def sendSelectedPIDs(username,PIDs):
-	print "Storing selected PIDs for {username}".format(username=username)	
-	pipe = r_selectedPIDs_handle.pipeline()
+
+# PID selection
+def sendUserPIDs(username,PIDs):
+	print "Storing selected PIDs for {username}".format(username=username)				
 	for PID in PIDs:
-		# CONSIDER USING SETS HERE "SAAD"		
-		pipe.lpush("{username}_selectedPIDs".format(username=username),PID)
-	pipe.execute()
-	print "PIDs stored."
-
-def userPagGen(username):
-	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+		db.session.add(models.user_pids(PID,username))	
+	db.session.commit() # a failed commit while fail the whole lot
+	print "PIDs stored"	
 
 
-
-# PID selection - SQL style
-############################################################################################################
+#SLATED FOR REMOVAL, MOVING TO SQL
+#######################################################################################################################################
 # def sendSelectedPIDs(username,PIDs):
-# 	print "Storing selected PIDs for {username}".format(username=username)				
+# 	print "Storing selected PIDs for {username}".format(username=username)	
+# 	pipe = r_selectedPIDs_handle.pipeline()
 # 	for PID in PIDs:
-# 		db.session.add(models.selectedPID(PID))	
-# 	db.session.commit() # a failed commit while fail the whole lot
-# 	print "PIDs stored"	
+# 		# CONSIDER USING SETS HERE "SAAD"		
+# 		pipe.lpush("{username}_selectedPIDs".format(username=username),PID)
+# 	pipe.execute()
+# 	print "PIDs stored."
 
 # def userPagGen(username):
 # 	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
+#######################################################################################################################################
+
+
+
+
+
 
 
 

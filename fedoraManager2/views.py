@@ -53,10 +53,7 @@ def index():
 # 	return json.dumps(response_data)
 
 
-# 	return "You are looking for {task_id}".format(task_id=task_id)	
-
-
-		
+# 	return "You are looking for {task_id}".format(task_id=task_id)		
 
 
 
@@ -195,117 +192,71 @@ def jobStatus(job_num):
 
 # PID MANAGEMENT
 ####################################################################################
-# PID selection sandboxing
-@app.route("/PIDselectionUser", methods=['POST', 'GET'])
-def PIDselectionUser():
-	# get username from session
-	username = session['username']
-	form = forms.PIDselection(request.form)
-	if request.method == 'POST':		
-		PID = form.PID.data				
-		jobs.sendSelectedPIDs(username,PID)
-		return redirect("/PIDmanage/1".format(username=username))
-		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
-	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
-
 
 @app.route("/PIDselectionSQL", methods=['POST', 'GET'])
-def PIDselectionSQL():
-	'''
-	Here's where we are with SQL.
-	1) we have a handle "db" for the SQLalchemy, this will be useful for creating and possibly updating rows
-	2) hell, this might be handy for querying as well!
-
-	3) but we ALSO have a raw handle "db_con" which we can issue commands like this:
-		goober = db_con.execute("SELECT * from selectedPID")
-		goober.first()
-		>> (1L, 'wayne:CFAIEByadda')
-	'''
+def PIDselectionSQL():	
 
 	# get username from session
 	username = session['username']
 	form = forms.PIDselection(request.form)
 
-	if request.method == 'POST':		
+	if request.method == 'POST':		 
 		PID = form.PID.data				
-		jobs.sendSelectedPIDs(username,PID)				
-		return "PIDs have been added via MySQL"	
-		
+		jobs.sendUserPIDs(username,PID)
+		return redirect("/PIDmanage/1")		
 
-	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
-
+	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
 
 # PID check for user
 @app.route("/PIDmanage/<pagenum>")
-def PIDmanage(pagenum):
-	# start timer
-	stime = time.time()
-
+def PIDmanage(pagenum):	
 	# get username from session
-	username = session['username']	
-
-	# entirety of pagination code - lightning fast, can break this out somewhere else	
-	userPag = jobs.userPagGen(username)	
-	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
-	print "Paginator is",sys.getsizeof(userPag),"bytes"
-	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)				
-	cpage = userPag.page(pagenum)	
-
-	# report time passed	
-	etime = time.time()
-	ttime = (etime - stime) * 1000
-	print "PID retrieval took",ttime,"ms"	
+	username = session['username']
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDmanage.html",cpage_PIDs=cpage.object_list,username=username,userPag=userPag,cpage=cpage,pagenum=int(pagenum))
+	return render_template("PIDSQL.html",username=username,pagenum=int(pagenum))
+
+
+
+# SLATED FOR REMOVAL, MOVING TO SQLalchemy
+################################################################################################################################################
+# # PID selection sandboxing
+# @app.route("/PIDselectionUser", methods=['POST', 'GET'])
+# def PIDselectionUser():
+# 	# get username from session
+# 	username = session['username']
+# 	form = forms.PIDselection(request.form)
+# 	if request.method == 'POST':		
+# 		PID = form.PID.data				
+# 		jobs.sendSelectedPIDs(username,PID)
+# 		return redirect("/PIDmanage/1".format(username=username))
+# 		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
+# 	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
 
 # PID check for user
-@app.route("/PIDmanage_data",methods=['POST', 'GET'])
-def PIDmanage_data():
-	response_dict = {
-  "draw": 1,
-  "recordsTotal": 10,
-  "recordsFiltered": 10,
-  "start":0,
-  "length":10,
-  "data": [
-    [
-      "Airi",      
-    ],
-    [
-      "Angelica",      
-    ],
-    [
-      "Ashton",      
-    ],
-    [
-      "Bradley",      
-    ],
-    [
-      "Brenden",      
-    ],
-    [
-      "Brielle",      
-    ],
-    [
-      "Bruno",      
-    ],
-    [
-      "Caesar",      
-    ],
-    [
-      "Cara",      
-    ],
-    [
-      "Cedric",      
-    ]
-  ]
-}	
-	json_string = json.dumps(response_dict)	
-	resp = make_response(json_string)
-	resp.headers['Content-Type'] = 'application/json'
-	return resp
+# @app.route("/PIDmanage/<pagenum>")
+# def PIDmanage(pagenum):
+# 	# start timer
+# 	stime = time.time()
 
+# 	# get username from session
+# 	username = session['username']	
+
+# 	# entirety of pagination code - lightning fast, can break this out somewhere else	
+# 	userPag = jobs.userPagGen(username)	
+# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
+# 	print "Paginator is",sys.getsizeof(userPag),"bytes"
+# 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)				
+# 	cpage = userPag.page(pagenum)	
+
+# 	# report time passed	
+# 	etime = time.time()
+# 	ttime = (etime - stime) * 1000
+# 	print "PID retrieval took",ttime,"ms"	
+
+# 	# pass the current PIDs to page as list	
+# 	return render_template("PIDmanage.html",cpage_PIDs=cpage.object_list,username=username,userPag=userPag,cpage=cpage,pagenum=int(pagenum))
+################################################################################################################################################
 
 
 

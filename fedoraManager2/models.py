@@ -19,12 +19,14 @@ class taskBlob:
 
 
 
-class selectedPID(db.Model):
+class user_pids(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    PID = db.Column(db.String(120), unique=True)    
+    PID = db.Column(db.String(255), unique=True)
+    username = db.Column(db.String(255))
 
-    def __init__(self, PID):
+    def __init__(self, PID, username):
         self.PID = PID        
+        self.username = username
 
     def __repr__(self):
         return '<PID %r>' % self.PID

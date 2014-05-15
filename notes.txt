@@ -22,6 +22,8 @@ SQL
 database = "fedoraManager2"
 superuser = fm2
 superuser password = fm2
+tables:
+	user_pids = user_pids
 
 
 Libraries to research
