@@ -4,6 +4,10 @@
 $(document).ready(function(){			
 	$('#example').DataTable( {		
 	    "serverSide": true,
-		"sAjaxSource": 'http://162.243.93.130/cgi-bin/php_dt.php'				    
+		// "sAjaxSource": 'http://162.243.93.130/cgi-bin/php_dt.php',
+		"sAjaxSource": 'http://162.243.93.130/cgi-bin/python_dt.py',				
+		// "search": {
+		// 	"search":"smalluser"
+		// }			
 	} );	
 });
