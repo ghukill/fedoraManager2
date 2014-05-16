@@ -81,7 +81,6 @@ def userPage(username):
 # JOB MANAGEMENT
 #########################################################################################################
 
-
 # fireTask is the factory that begins tasks from fedoraManager2.actions
 # epecting task function name from actions module, e.g. "sampleTask"
 @app.route("/fireTask/<task_name>")
@@ -98,6 +97,7 @@ def fireTask(task_name):
 	jobHand = jobInit['jobHand']
 	taskHand = jobInit['taskHand']
 
+	# get new job number
 	job_num = jobHand.job_num
 
 	# begin job
@@ -129,55 +129,6 @@ def fireTask(task_name):
 
 	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
-#SLATED FOR REMOVAL TO SQL
-##################################################################################################################################
-# # fireTask is the factory that begins tasks from fedoraManager2.actions
-# # epecting task function name from actions module, e.g. "sampleTask"
-# @app.route("/fireTask/<task_name>")
-# def fireTask(task_name):
-# 	print "Starting taskv3 request..."
-	
-# 	# get username from session (will pull from user auth session later)
-# 	username = session['username']	
-# 	# get total PIDs associated with user
-# 	userPag = jobs.userPagGen(username)	
-
-# 	# instatiate jobHand object with incrementing job_num
-# 	jobInit = jobs.jobStart()
-# 	jobHand = jobInit['jobHand']
-# 	taskHand = jobInit['taskHand']
-
-# 	job_num = jobHand.job_num
-
-# 	# begin job
-# 	print "Antipcating",userPag.count,"tasks...."
-# 	# push estimated tasks to jobHand and taskHand
-# 	jobHand.estimated_tasks = userPag.count
-# 	taskHand.estimated_tasks = userPag.count
-	
-# 	# create job_package
-# 	job_package = {		
-# 		"username":username,
-# 		"job_num":job_num,
-# 		"jobHand":jobHand		
-# 	}
-
-# 	# grab task from actions based on URL "task_name" parameter, using getattr	
-# 	task_function = getattr(actions, task_name)
-
-# 	# send to celeryTaskFactory in actions.py
-# 	# iterates through PIDs and creates secondary async tasks for each
-# 	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
-# 	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
-
-# 	# preliminary update
-# 	jobs.jobUpdate(jobHand)		
-# 	jobs.taskUpdate(taskHand)
-
-# 	print "Started job #",jobHand.job_num
-
-# 	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
-##################################################################################################################################
 
 @app.route("/jobStatus/<job_num>")
 def jobStatus(job_num):		
@@ -264,50 +215,6 @@ def PIDmanage(pagenum):
 
 	# pass the current PIDs to page as list	
 	return render_template("PIDSQL.html",username=username,pagenum=int(pagenum))
-
-
-
-# SLATED FOR REMOVAL, MOVING TO SQLalchemy
-################################################################################################################################################
-# # PID selection sandboxing
-# @app.route("/PIDselectionUser", methods=['POST', 'GET'])
-# def PIDselectionUser():
-# 	# get username from session
-# 	username = session['username']
-# 	form = forms.PIDselection(request.form)
-# 	if request.method == 'POST':		
-# 		PID = form.PID.data				
-# 		jobs.sendSelectedPIDs(username,PID)
-# 		return redirect("/PIDmanage/1".format(username=username))
-# 		return "We've got form data, your username is {username}, and your PIDs are {PID}.".format(username=username,PID=PID)                
-# 	return render_template('PIDformUser.html', username=username, form=form)# PID selection sandboxing
-
-# PID check for user
-# @app.route("/PIDmanage/<pagenum>")
-# def PIDmanage(pagenum):
-# 	# start timer
-# 	stime = time.time()
-
-# 	# get username from session
-# 	username = session['username']	
-
-# 	# entirety of pagination code - lightning fast, can break this out somewhere else	
-# 	userPag = jobs.userPagGen(username)	
-# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=username)
-# 	print "Paginator is",sys.getsizeof(userPag),"bytes"
-# 	print "You have {PID_count} PIDs, will need {page_count} pages.".format(PID_count=userPag.count,page_count=userPag.num_pages)				
-# 	cpage = userPag.page(pagenum)	
-
-# 	# report time passed	
-# 	etime = time.time()
-# 	ttime = (etime - stime) * 1000
-# 	print "PID retrieval took",ttime,"ms"	
-
-# 	# pass the current PIDs to page as list	
-# 	return render_template("PIDmanage.html",cpage_PIDs=cpage.object_list,username=username,userPag=userPag,cpage=cpage,pagenum=int(pagenum))
-################################################################################################################################################
-
-
 
 
 # Catch all - DON'T REMOVE

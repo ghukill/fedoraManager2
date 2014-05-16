@@ -61,21 +61,6 @@ def sendUserPIDs(username,PIDs):
 	print "PIDs stored"	
 
 
-#SLATED FOR REMOVAL, MOVING TO SQL
-#######################################################################################################################################
-# def sendSelectedPIDs(username,PIDs):
-# 	print "Storing selected PIDs for {username}".format(username=username)	
-# 	pipe = r_selectedPIDs_handle.pipeline()
-# 	for PID in PIDs:
-# 		# CONSIDER USING SETS HERE "SAAD"		
-# 		pipe.lpush("{username}_selectedPIDs".format(username=username),PID)
-# 	pipe.execute()
-# 	print "PIDs stored."
-
-# def userPagGen(username):
-# 	return ListPaginator(r_selectedPIDs_handle, "{username}_selectedPIDs".format(username=username), 10)
-#######################################################################################################################################
-
 
 
 

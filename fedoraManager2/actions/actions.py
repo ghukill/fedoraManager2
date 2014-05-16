@@ -22,8 +22,8 @@ def celeryTaskFactory(**kwargs):
 	userPID_pag = models.user_pids.query.paginate(1,5)
 	# userPID_pag = kwargs['userPID_pag']	
 	
-	step = 1
-	for page in userPID_pag.iter_pages():
+	step = 1	
+	while userPID_pag.page < (userPID_pag.pages + 1):
 
 		# iterate through PIDs in userPID_pag page
 		for PID in userPID_pag.items:			
@@ -41,34 +41,6 @@ def celeryTaskFactory(**kwargs):
 		print "next page..."		
 
 
-# MOVING INTO SQL 
-##################################################################################################################################
-# @celery.task()
-# def celeryTaskFactory(**kwargs):
-	
-# 	# create job_package
-# 	job_package = kwargs['job_package']
-
-# 	# get selectedPIDs	
-# 	userPag = jobs.userPagGen(job_package['username'])	
-# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=job_package['username'])	
-
-# 	# run task by iterating through userPag (Paginator object)
-# 	step = 1	
-# 	while step < (userPag.count + 1):			
-
-# 		job_package['step'] = step
-# 		print "Firing off task:",step		
-# 		# fire off async task		
-# 		result = kwargs['task_function'].delay(job_package)				
-
-# 		# push result to jobHand
-# 		job_package['jobHand'].assigned_tasks.append(result)
-# 		jobs.jobUpdate(job_package['jobHand'])
-
-# 		step += 1
-##################################################################################################################################
-
 
 @celery.task()
 def sampleTask(job_package):
@@ -77,7 +49,7 @@ def sampleTask(job_package):
 	print "Starting sampleTask",job_package['step']
 	
 	# delay for testing	
-	time.sleep(.25)	
+	# time.sleep(.25)	
 	
 	# update taskHand about task	
 	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
