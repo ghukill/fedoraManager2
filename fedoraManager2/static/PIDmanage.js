@@ -1,10 +1,8 @@
 // JS for creating tables based on user selectedPIDs
 
+var selected = [];
 
-
-$(document).ready(function(){	
-
-	var selected = [];
+$(document).ready(function(){		
 	
 	$('#example').dataTable( {		
 	    "serverSide": true,		
@@ -14,25 +12,24 @@ $(document).ready(function(){
 	    ],
 		"ajax": 'http://162.243.93.130/cgi-bin/php_simple.php',		
 		"rowCallback": function( row, data, displayIndex ) {
-            if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+            if ( $.inArray(data[0], selected) !== -1 ) {
                 $(row).addClass('selected');
                 console.log("fired");
             }
         }
 	} );	
 
-	$('#example tbody').on('click', 'tr', function () {
-        var id = this.id;
-        var index = $.inArray(id, selected);
- 
-        if ( index === -1 ) {
-            selected.push( id );
-        } else {
-            selected.splice( index, 1 );
-        }
- 
-        $(this).toggleClass('selected');
-    } );
+	// Working pretty nice!
+	$('#example tbody').on('click', 'tr', function () {	        
+	    var id = $(this).children()[0].innerHTML;    
+	    var index = $.inArray(id, selected);
+	    if ( index === -1 ) {
+	        selected.push( id );
+	    } else {
+	        selected.splice( index, 1 );
+	    }
+	    $(this).toggleClass('selected');
+	} );
 
 	// simple click example
 	// $('#example tbody').on('click', 'tr', function () {
