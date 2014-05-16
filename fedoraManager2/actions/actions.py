@@ -3,6 +3,7 @@ import redis
 
 import fedoraManager2.jobs as jobs
 import fedoraManager2.redisHandles as redisHandles
+import fedoraManager2.models as models
 
 # local dependecies
 import time
@@ -17,24 +18,27 @@ def celeryTaskFactory(**kwargs):
 	# create job_package
 	job_package = kwargs['job_package']
 
-	# get user selectedPIDs	
+	# get and iterate through user selectedPIDs
+	userPID_pag = models.user_pids.query.paginate(1,5)
+	# userPID_pag = kwargs['userPID_pag']	
 	
-		
+	step = 1
+	for page in userPID_pag.iter_pages():
 
-	# run task by iterating through userPag (Paginator object)
-	step = 1	
-	while step < (userPag.count + 1):			
+		# iterate through PIDs in userPID_pag page
+		for PID in userPID_pag.items:			
+			print "Operating on PID:",PID.PID," / Step:",step		
+			job_package['step'] = step			
+			# fire off async task		
+			result = kwargs['task_function'].delay(job_package)				
+			# push result to jobHand
+			job_package['jobHand'].assigned_tasks.append(result)
+			jobs.jobUpdate(job_package['jobHand'])
+			step += 1
 
-		job_package['step'] = step
-		print "Firing off task:",step		
-		# fire off async task		
-		result = kwargs['task_function'].delay(job_package)				
-
-		# push result to jobHand
-		job_package['jobHand'].assigned_tasks.append(result)
-		jobs.jobUpdate(job_package['jobHand'])
-
-		step += 1
+		# next page
+		userPID_pag = userPID_pag.next()
+		print "next page..."		
 
 
 # MOVING INTO SQL 

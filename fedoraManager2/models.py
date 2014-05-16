@@ -28,5 +28,5 @@ class user_pids(db.Model):
         self.PID = PID        
         self.username = username
 
-    def __repr__(self):
-        return '<PID %r>' % self.PID
+    def __repr__(self):    	
+        return '<PID {PID}, username {username}>'.format(PID=self.PID,username=self.username)

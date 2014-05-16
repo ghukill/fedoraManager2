@@ -90,8 +90,8 @@ def fireTask(task_name):
 	
 	# get username from session (will pull from user auth session later)
 	username = session['username']	
-	# generate userPag (Pagination object) of user's selected PIDs
-	userPag = jobs.userPagGen(username)	
+	# get total PIDs associated with user
+	userPID_pag = models.user_pids.query.paginate(1,5)
 
 	# instatiate jobHand object with incrementing job_num
 	jobInit = jobs.jobStart()
@@ -101,10 +101,10 @@ def fireTask(task_name):
 	job_num = jobHand.job_num
 
 	# begin job
-	print "Antipcating",userPag.count,"tasks...."
+	print "Antipcating",userPID_pag.total,"tasks...."
 	# push estimated tasks to jobHand and taskHand
-	jobHand.estimated_tasks = userPag.count
-	taskHand.estimated_tasks = userPag.count
+	jobHand.estimated_tasks = userPID_pag.total
+	taskHand.estimated_tasks = userPID_pag.total
 	
 	# create job_package
 	job_package = {		
@@ -129,6 +129,55 @@ def fireTask(task_name):
 
 	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
+#SLATED FOR REMOVAL TO SQL
+##################################################################################################################################
+# # fireTask is the factory that begins tasks from fedoraManager2.actions
+# # epecting task function name from actions module, e.g. "sampleTask"
+# @app.route("/fireTask/<task_name>")
+# def fireTask(task_name):
+# 	print "Starting taskv3 request..."
+	
+# 	# get username from session (will pull from user auth session later)
+# 	username = session['username']	
+# 	# get total PIDs associated with user
+# 	userPag = jobs.userPagGen(username)	
+
+# 	# instatiate jobHand object with incrementing job_num
+# 	jobInit = jobs.jobStart()
+# 	jobHand = jobInit['jobHand']
+# 	taskHand = jobInit['taskHand']
+
+# 	job_num = jobHand.job_num
+
+# 	# begin job
+# 	print "Antipcating",userPag.count,"tasks...."
+# 	# push estimated tasks to jobHand and taskHand
+# 	jobHand.estimated_tasks = userPag.count
+# 	taskHand.estimated_tasks = userPag.count
+	
+# 	# create job_package
+# 	job_package = {		
+# 		"username":username,
+# 		"job_num":job_num,
+# 		"jobHand":jobHand		
+# 	}
+
+# 	# grab task from actions based on URL "task_name" parameter, using getattr	
+# 	task_function = getattr(actions, task_name)
+
+# 	# send to celeryTaskFactory in actions.py
+# 	# iterates through PIDs and creates secondary async tasks for each
+# 	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
+# 	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
+
+# 	# preliminary update
+# 	jobs.jobUpdate(jobHand)		
+# 	jobs.taskUpdate(taskHand)
+
+# 	print "Started job #",jobHand.job_num
+
+# 	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
+##################################################################################################################################
 
 @app.route("/jobStatus/<job_num>")
 def jobStatus(job_num):		
