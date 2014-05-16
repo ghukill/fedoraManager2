@@ -17,9 +17,9 @@ def celeryTaskFactory(**kwargs):
 	# create job_package
 	job_package = kwargs['job_package']
 
-	# get selectedPIDs	
-	userPag = jobs.userPagGen(job_package['username'])	
-	print "Found {count} PIDs for {username}".format(count=userPag.count,username=job_package['username'])	
+	# get user selectedPIDs	
+	
+		
 
 	# run task by iterating through userPag (Paginator object)
 	step = 1	
@@ -35,6 +35,35 @@ def celeryTaskFactory(**kwargs):
 		jobs.jobUpdate(job_package['jobHand'])
 
 		step += 1
+
+
+# MOVING INTO SQL 
+##################################################################################################################################
+# @celery.task()
+# def celeryTaskFactory(**kwargs):
+	
+# 	# create job_package
+# 	job_package = kwargs['job_package']
+
+# 	# get selectedPIDs	
+# 	userPag = jobs.userPagGen(job_package['username'])	
+# 	print "Found {count} PIDs for {username}".format(count=userPag.count,username=job_package['username'])	
+
+# 	# run task by iterating through userPag (Paginator object)
+# 	step = 1	
+# 	while step < (userPag.count + 1):			
+
+# 		job_package['step'] = step
+# 		print "Firing off task:",step		
+# 		# fire off async task		
+# 		result = kwargs['task_function'].delay(job_package)				
+
+# 		# push result to jobHand
+# 		job_package['jobHand'].assigned_tasks.append(result)
+# 		jobs.jobUpdate(job_package['jobHand'])
+
+# 		step += 1
+##################################################################################################################################
 
 
 @celery.task()
