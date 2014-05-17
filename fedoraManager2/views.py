@@ -190,6 +190,13 @@ def jobStatus(job_num):
 	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)
 
 
+@app.route("/userJobs")
+def userJobs():	
+
+	username = session['username']
+	return "{username}, your jobs...".format(username=username)
+
+
 # PID MANAGEMENT
 ####################################################################################
 
