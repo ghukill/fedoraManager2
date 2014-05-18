@@ -20,13 +20,27 @@ class taskBlob:
 
 
 class user_pids(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    PID = db.Column(db.String(255), unique=True)
-    username = db.Column(db.String(255))
+	id = db.Column(db.Integer, primary_key=True)
+	PID = db.Column(db.String(255), unique=True)
+	username = db.Column(db.String(255))
 
-    def __init__(self, PID, username):
-        self.PID = PID        
-        self.username = username
+	def __init__(self, PID, username):
+		self.PID = PID        
+		self.username = username
 
-    def __repr__(self):    	
-        return '<PID {PID}, username {username}>'.format(PID=self.PID,username=self.username)
+	def __repr__(self):    	
+		return '<PID {PID}, username {username}>'.format(PID=self.PID,username=self.username)
+
+class user_jobs(db.Model):
+	# id = db.Column(db.Integer, primary_key=True)
+	job_num = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=False)
+	username = db.Column(db.String(255))
+	status = db.Column(db.String(255))
+
+	def __init__(self, job_num, username, status):
+		self.job_num = job_num
+		self.username = username
+		self.status = status
+
+	def __repr__(self):    	
+		return '<Job# {job_num}, username: {username}, status: {status}>'.format(job_num=self.job_num,username=self.username, status=self.status)

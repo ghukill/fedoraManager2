@@ -100,6 +100,10 @@ def fireTask(task_name):
 	# get new job number
 	job_num = jobHand.job_num
 
+	# send job to user_jobs SQL table
+	db.session.add(models.user_jobs(job_num,username, "init"))	
+	db.session.commit() 
+
 	# begin job
 	print "Antipcating",userPID_pag.total,"tasks...."
 	# push estimated tasks to jobHand and taskHand
@@ -194,7 +198,14 @@ def jobStatus(job_num):
 def userJobs():	
 
 	username = session['username']
-	return "{username}, your jobs...".format(username=username)
+	return '''
+	<h2>{username}, your jobs...</h2>
+	<p>What we're going to do here: 
+	<ol>
+		<li>hit the user_jobs SQL table and return job_num's for a user</li>
+		<li>pull code from jobStaus function to poll the job in redis</li>
+		<li>have that polling process update the 'status' column in job</li>
+	</ol></p>'''.format(username=username)
 
 
 # PID MANAGEMENT
