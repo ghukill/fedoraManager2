@@ -35,6 +35,7 @@ class user_jobs(db.Model):
 	# id = db.Column(db.Integer, primary_key=True)
 	job_num = db.Column(db.Integer, primary_key=True, unique=True, autoincrement=False)
 	username = db.Column(db.String(255))
+	# for status, expecting: spooling, pending, running, completed, supressed
 	status = db.Column(db.String(255))
 
 	def __init__(self, job_num, username, status):

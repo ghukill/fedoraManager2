@@ -160,15 +160,17 @@ def jobStatus(job_num):
 		print "Job spooling..."
 		status_package['job_status'] = "spooling"
 
-	# check if pending jobs done
+	# check if pending
 	elif len(taskHand.completed_tasks) == 0:
 		print "Job Pending, waiting for others to complete.  Isn't that polite?"
 		status_package['job_status'] = "pending"		
 
+	# check if completed
 	elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
 		print "Job Complete!"
 		status_package['job_status'] = "complete"		
 
+	# else, must be running
 	else:
 		status_package['job_status'] = "running"
 		etime = time.time()
@@ -195,17 +197,74 @@ def jobStatus(job_num):
 
 
 @app.route("/userJobs")
-def userJobs():	
+def userJobs():
+	'''
+	Working to some degree already.  
+	Improvements:
+		- when begin polling, don't need to keep hitting completed jobs, as it requires a hit to redis jobs database
+		- javascrdipt polling, similar problem around how often to poll
+	'''
 
 	username = session['username']
-	return '''
-	<h2>{username}, your jobs...</h2>
-	<p>What we're going to do here: 
-	<ol>
-		<li>hit the user_jobs SQL table and return job_num's for a user</li>
-		<li>pull code from jobStaus function to poll the job in redis</li>
-		<li>have that polling process update the 'status' column in job</li>
-	</ol></p>'''.format(username=username)
+
+	# get user jobs
+	user_jobs_list = models.user_jobs.query.filter_by(username=username)
+
+	# return package
+	return_package = []
+
+	for job in user_jobs_list:
+
+		job_num = job.job_num
+
+		# create package
+		status_package = {}
+		status_package["job_num"] = job_num #this is pulled from SQL table
+
+		# get job
+		jobHand = jobs.jobGet(job_num)
+		taskHand = jobs.taskGet(job_num)
+		taskHand.last_completed_task_num = len(taskHand.completed_tasks)	
+
+		# spooling, works on stable jobHand object
+		if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
+			print "Job spooling..."
+			status_package['job_status'] = "spooling"
+
+		# check if pending
+		elif len(taskHand.completed_tasks) == 0:
+			print "Job Pending, waiting for others to complete.  Isn't that polite?"
+			status_package['job_status'] = "pending"		
+
+		# check if completed
+		elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
+			print "Job Complete!"
+			status_package['job_status'] = "complete"		
+
+		# else, must be running
+		else:
+			status_package['job_status'] = "running"			
+
+		# data return 
+		response_dict = {
+			"job_num":job_num,
+			"job_status":status_package['job_status'],
+			"completed_tasks":len(taskHand.completed_tasks),
+			"estimated_tasks":taskHand.estimated_tasks
+		}
+
+		# return_package[status_package["job_num"]] = response_dict		
+		return_package.append(response_dict)
+
+
+	# return return_package
+	if request.args.get("data","") == "true":
+		json_string = json.dumps(return_package)
+		resp = make_response(json_string)
+		resp.headers['Content-Type'] = 'application/json'
+		return resp
+	else:
+		return render_template("userJobs.html",username=session['username'])
 
 
 # PID MANAGEMENT

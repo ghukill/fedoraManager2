@@ -48,6 +48,12 @@ def taskGet(job_num):
 	taskHand.completed_tasks = 	completed_tasks	
 	return taskHand
 
+def updateSQLJobStatus(job_num):
+	pass
+	# updates status in 
+	# db.session.add(models.user_jobs(job_num,username, "init"))	
+	# db.session.commit() 
+
 
 # PID selection
 ############################################################################################################
