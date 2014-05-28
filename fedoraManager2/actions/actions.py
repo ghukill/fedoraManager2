@@ -33,6 +33,7 @@ def celeryTaskFactory(**kwargs):
 			result = kwargs['task_function'].delay(job_package)				
 			# push result to jobHand
 			job_package['jobHand'].assigned_tasks.append(result)
+			# updates jobHand in redis so that polling process get up-to-date reflection of tasks added
 			jobs.jobUpdate(job_package['jobHand'])
 			step += 1
 

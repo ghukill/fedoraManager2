@@ -48,3 +48,8 @@ Big Questions / Changes / Ideas
 
 Is it possible to have users work on different workers?
 Pause / Stop jobs...
+
+To-do
+1. monitor logs of a job, or just the celery logs if nothing else
+2. wire up to an actual task, see how it operates
+3. work on PID selection, removal, search-removal (do a search, remove THOSE from already selected), risearch

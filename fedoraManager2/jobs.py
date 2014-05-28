@@ -44,6 +44,7 @@ def taskUpdate(taskHand):
 def taskGet(job_num):
 	taskHand_pickled = r_job_handle.get("taskStatus_{job_num}".format(job_num=job_num))
 	taskHand = pickle.loads(taskHand_pickled)	
+	# this is key, loads all tasks for a given job number
 	completed_tasks = r_job_handle.keys("task*job_num{job_num}".format(job_num=job_num))
 	taskHand.completed_tasks = 	completed_tasks	
 	return taskHand

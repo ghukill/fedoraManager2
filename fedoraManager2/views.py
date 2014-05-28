@@ -131,7 +131,8 @@ def fireTask(task_name):
 
 	print "Started job #",jobHand.job_num
 
-	return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
+	return redirect("/userJobs")
+	# return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
 
 @app.route("/jobStatus/<job_num>")
@@ -147,27 +148,21 @@ def jobStatus(job_num):
 	# get job
 	jobHand = jobs.jobGet(job_num)
 	taskHand = jobs.taskGet(job_num)
-	taskHand.last_completed_task_num = len(taskHand.completed_tasks)
-
-	# DEBUG
-	# print "length of jobHand assigned:", len(jobHand.assigned_tasks)
-	# print "integer of jobHand estimated tasks:",int(jobHand.estimated_tasks)
-	# print "taskHand.completed_tasks:",taskHand.completed_tasks
-	# print "length of taskHand.completed_tasks:",len(taskHand.completed_tasks)	
+	# taskHand.last_completed_task_num = len(taskHand.completed_tasks)
 
 	# spooling, works on stable jobHand object
 	if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
-		print "Job spooling..."
+		# print "Job spooling..."
 		status_package['job_status'] = "spooling"
 
 	# check if pending
 	elif len(taskHand.completed_tasks) == 0:
-		print "Job Pending, waiting for others to complete.  Isn't that polite?"
+		# print "Job Pending, waiting for others to complete.  Isn't that polite?"
 		status_package['job_status'] = "pending"		
 
 	# check if completed
 	elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
-		print "Job Complete!"
+		# print "Job Complete!"
 		status_package['job_status'] = "complete"		
 
 	# else, must be running
@@ -208,7 +203,8 @@ def userJobs():
 	username = session['username']
 
 	# get user jobs
-	user_jobs_list = models.user_jobs.query.filter_by(username=username)
+	# user_jobs_list = models.user_jobs.query.filter_by(username=username="complete").filter(models.user_jobs.status != "complete")
+	user_jobs_list = models.user_jobs.query.filter(models.user_jobs.status != "complete", models.user_jobs.username == username)
 
 	# return package
 	return_package = []
@@ -224,7 +220,6 @@ def userJobs():
 		# get job
 		jobHand = jobs.jobGet(job_num)
 		taskHand = jobs.taskGet(job_num)
-		taskHand.last_completed_task_num = len(taskHand.completed_tasks)	
 
 		# spooling, works on stable jobHand object
 		if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
@@ -237,9 +232,13 @@ def userJobs():
 			status_package['job_status'] = "pending"		
 
 		# check if completed
-		elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
-			print "Job Complete!"
-			status_package['job_status'] = "complete"		
+		elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:						
+			status_package['job_status'] = "complete"	
+			# udpate job status in SQL db here
+			job.status = "complete"
+			db.session.commit()
+			print "Job Complete!  Updated in SQL."
+
 
 		# else, must be running
 		else:
