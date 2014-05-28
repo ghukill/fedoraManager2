@@ -132,73 +132,70 @@ def fireTask(task_name):
 	print "Started job #",jobHand.job_num
 
 	return redirect("/userJobs")
-	# return redirect("/jobStatus/{job_num}?jobInit=true".format(job_num=jobHand.job_num))
 
 
 @app.route("/jobStatus/<job_num>")
-def jobStatus(job_num):		
+def jobStatus(job_num):	
+	'''
+	Look into making this more detailed for the job, perhaps this is where the logs will be monitored
+	'''
+	pass	
 	
-	# start timer
-	stime = time.time()
+	# # start timer
+	# stime = time.time()
 
-	# create package
-	status_package = {}
-	status_package["job_num"] = job_num
+	# # create package
+	# status_package = {}
+	# status_package["job_num"] = job_num
 
-	# get job
-	jobHand = jobs.jobGet(job_num)
-	taskHand = jobs.taskGet(job_num)
-	# taskHand.last_completed_task_num = len(taskHand.completed_tasks)
+	# # get job
+	# jobHand = jobs.jobGet(job_num)
+	# taskHand = jobs.taskGet(job_num)
+	# # taskHand.last_completed_task_num = len(taskHand.completed_tasks)
 
-	# spooling, works on stable jobHand object
-	if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
-		# print "Job spooling..."
-		status_package['job_status'] = "spooling"
+	# # spooling, works on stable jobHand object
+	# if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
+	# 	# print "Job spooling..."
+	# 	status_package['job_status'] = "spooling"
 
-	# check if pending
-	elif len(taskHand.completed_tasks) == 0:
-		# print "Job Pending, waiting for others to complete.  Isn't that polite?"
-		status_package['job_status'] = "pending"		
+	# # check if pending
+	# elif len(taskHand.completed_tasks) == 0:
+	# 	# print "Job Pending, waiting for others to complete.  Isn't that polite?"
+	# 	status_package['job_status'] = "pending"		
 
-	# check if completed
-	elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
-		# print "Job Complete!"
-		status_package['job_status'] = "complete"		
+	# # check if completed
+	# elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
+	# 	# print "Job Complete!"
+	# 	status_package['job_status'] = "complete"		
 
-	# else, must be running
-	else:
-		status_package['job_status'] = "running"
-		etime = time.time()
-		ttime = (etime - stime) * 1000
-		print "Pending / Completion check took",ttime,"ms"
+	# # else, must be running
+	# else:
+	# 	status_package['job_status'] = "running"
+	# 	etime = time.time()
+	# 	ttime = (etime - stime) * 1000
+	# 	print "Pending / Completion check took",ttime,"ms"
 
-	# data return 
-	if request.args.get("data","") == "true":
-		response_dict = {
-			"job_status":status_package['job_status'],
-			"completed_tasks":len(taskHand.completed_tasks),
-			"estimated_tasks":taskHand.estimated_tasks
-		}
-		json_string = json.dumps(response_dict)
-		print json_string
-		resp = make_response(json_string)
-		resp.headers['Content-Type'] = 'application/json'
-		return resp
+	# # data return 
+	# if request.args.get("data","") == "true":
+	# 	response_dict = {
+	# 		"job_status":status_package['job_status'],
+	# 		"completed_tasks":len(taskHand.completed_tasks),
+	# 		"estimated_tasks":taskHand.estimated_tasks
+	# 	}
+	# 	json_string = json.dumps(response_dict)
+	# 	print json_string
+	# 	resp = make_response(json_string)
+	# 	resp.headers['Content-Type'] = 'application/json'
+	# 	return resp
 
-	# render human page (this will probably go the way of the dodo with jobs dashboard)
-	if request.args.get("jobInit","") == "true":
-		status_package['jobInit'] = "true"
-	return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)
+	# # render human page (this will probably go the way of the dodo with jobs dashboard)
+	# if request.args.get("jobInit","") == "true":
+	# 	status_package['jobInit'] = "true"
+	# return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)
 
 
 @app.route("/userJobs")
 def userJobs():
-	'''
-	Working to some degree already.  
-	Improvements:
-		- when begin polling, don't need to keep hitting completed jobs, as it requires a hit to redis jobs database
-		- javascrdipt polling, similar problem around how often to poll
-	'''
 
 	username = session['username']
 
@@ -223,20 +220,21 @@ def userJobs():
 
 		# spooling, works on stable jobHand object
 		if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
-			print "Job spooling..."
+			# print "Job spooling..."
 			status_package['job_status'] = "spooling"
+			job.status = "spooling"
 
 		# check if pending
 		elif len(taskHand.completed_tasks) == 0:
-			print "Job Pending, waiting for others to complete.  Isn't that polite?"
-			status_package['job_status'] = "pending"		
+			# print "Job Pending, waiting for others to complete.  Isn't that polite?"
+			status_package['job_status'] = "pending"	
+			job.status = "pending"	
 
 		# check if completed
 		elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:						
 			status_package['job_status'] = "complete"	
 			# udpate job status in SQL db here
 			job.status = "complete"
-			db.session.commit()
 			print "Job Complete!  Updated in SQL."
 
 
@@ -255,6 +253,8 @@ def userJobs():
 		# return_package[status_package["job_num"]] = response_dict		
 		return_package.append(response_dict)
 
+	# commit all changes to SQL db
+	db.session.commit()
 
 	# return return_package
 	if request.args.get("data","") == "true":
