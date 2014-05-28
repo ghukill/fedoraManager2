@@ -18,9 +18,12 @@ def celeryTaskFactory(**kwargs):
 	# create job_package
 	job_package = kwargs['job_package']
 
+	# get username
+	username = job_package['username']
+
 	# get and iterate through user selectedPIDs
-	userPID_pag = models.user_pids.query.paginate(1,5)
-	# userPID_pag = kwargs['userPID_pag']	
+	# userPID_pag = models.user_pids.query.paginate(1,5)
+	userPID_pag = models.user_pids.query.filter_by(username=username).paginate(1,5)
 	
 	step = 1	
 	while userPID_pag.page < (userPID_pag.pages + 1):

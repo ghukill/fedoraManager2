@@ -90,7 +90,7 @@ def fireTask(task_name):
 	# get username from session (will pull from user auth session later)
 	username = session['username']	
 	# get total PIDs associated with user
-	userPID_pag = models.user_pids.query.paginate(1,5)
+	userPID_pag = models.user_pids.query.filter_by(username=username).paginate(1,5)
 
 	# instatiate jobHand object with incrementing job_num
 	jobInit = jobs.jobStart()
