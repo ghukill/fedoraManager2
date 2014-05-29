@@ -284,13 +284,35 @@ def PIDselectionSQL():
 	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
 
 # PID check for user
-@app.route("/PIDmanage/<pagenum>")
-def PIDmanage(pagenum):	
+@app.route("/PIDmanage")
+def PIDmanage():	
 	# get username from session
 	username = session['username']
+	# set action to 'view'
+	action = "view"
+	print "Current action is:",action
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSQL.html",username=username,pagenum=int(pagenum))
+	return render_template("PIDSQL.html",username=username)
+
+
+@app.route("/PIDmanage/<action>")
+def PIDmanageAction(action):	
+	# get username from session
+	username = session['username']
+	print "Current action is:",action
+
+	if action == "s_del":
+		print "doing delete things here"
+
+	if action == "s_all":
+		print "selecting all of them"
+
+	if action == "s_none":
+		print "selection none of them"
+
+	# pass the current PIDs to page as list	
+	return render_template("PIDSQL.html",username=username)
 
 
 # Catch all - DON'T REMOVE

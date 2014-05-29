@@ -2,14 +2,10 @@
 
 var selected = [];
 
-$(document).ready(function(){		
-	
-	$('#example').dataTable( {		
-	    "serverSide": true,		
-	    "searchCols":[
-	    	null,
-	    	{"search":"smalluser", "escapeRegex":false}
-	    ],
+function paintTable(username){
+
+	var table_handle = $('#example').DataTable( {		
+	    "serverSide": true,			    	    
 		"ajax": 'http://162.243.93.130/cgi-bin/php_simple.php',		
 		"rowCallback": function( row, data, displayIndex ) {
             if ( $.inArray(data[0], selected) !== -1 ) {
@@ -17,7 +13,10 @@ $(document).ready(function(){
                 console.log("fired");
             }
         }
-	} );	
+	} );
+
+	// filter only the user
+	table_handle.columns(2).search(username).draw();	
 
 	// Working pretty nice!
 	$('#example tbody').on('click', 'tr', function () {	        
@@ -33,18 +32,17 @@ $(document).ready(function(){
 
 	// simple click example
 	// $('#example tbody').on('click', 'tr', function () {
- //        var name = $('td', this).eq(0).text();
- //        alert( 'You clicked on '+name+'\'s row' );
- //    } );
+        // var name = $('td', this).eq(0).text();
+        // alert( 'You clicked on '+name+'\'s row' );
+    // } );
 
 	// click selected
-	    // $('#example tbody').on( 'click', 'tr', function () {
-	    //     $(this).toggleClass('selected');
-	    // } );
-	 
-	    // $('#button').click( function () {
-	    //     alert( table.rows('.selected').data().length +' row(s) selected' );
-	    // } );
-
-});
+    // $('#example tbody').on( 'click', 'tr', function () {
+    //     $(this).toggleClass('selected');
+    // } );
+ 
+    // $('#button').click( function () {
+    //     alert( table.rows('.selected').data().length +' row(s) selected' );
+    // } );
+}
 

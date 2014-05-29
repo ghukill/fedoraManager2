@@ -5,8 +5,12 @@
 <!-- <script type="text/javascript" src="/static/PIDmanage.js"></script> -->
 
 <h1>Welcome <span style="color:green;">{{username}}</span>, the PIDs you have requested!</h1>
-
-<button id="button">Row Count</button>
+<h2>Pid Actions</h2>
+<ul>
+    <li><a href="/PIDmanage/s_all">Select All</a></li>
+    <li><a href="/PIDmanage/s_none">Select None</a></li>
+    <li><a href="/PIDmanage/s_del">Delete Selected</a></li>
+</ul>
 <table id="example" class="display" cellspacing="0" width="100%">
     <thead>
         <tr>
@@ -26,4 +30,9 @@
 
 
 <script type="text/javascript" src="{{ url_for('static',filename='PIDmanage.js')}}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        paintTable("{{username}}");
+    });    
+</script>
 {% include 'footer.html' %}
