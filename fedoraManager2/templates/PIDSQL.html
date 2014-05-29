@@ -7,9 +7,10 @@
 <h1>Welcome <span style="color:green;">{{username}}</span>, the PIDs you have requested!</h1>
 <h2>Pid Actions</h2>
 <ul>
-    <li><a href="#" onclick="s_all_true(); return false;">Select All</a></li>
-    <li><a href="#" onclick="s_all_false(); return false;">Select None</a></li>
-    <li><a href="/PIDmanage/s_del">Delete Selected</a></li>
+    <li><a href="/PIDmanageAction/s_all">Select All</a></li>
+    <li><a href="/PIDmanageAction/s_toggle">Toggle All</a></li>    
+    <li><a href="/PIDmanageAction/s_none">Select None</a></li>
+    <li><a href="/PIDmanageAction/s_del">Delete Selected</a></li>
 </ul>
 <table id="example" class="display" cellspacing="0" width="100%">
     <thead>

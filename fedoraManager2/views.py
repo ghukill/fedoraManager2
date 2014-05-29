@@ -296,26 +296,40 @@ def PIDmanage():
 	return render_template("PIDSQL.html",username=username)
 
 
-@app.route("/PIDmanage/<action>")
+@app.route("/PIDmanageAction/<action>")
 def PIDmanageAction(action):	
 	# get username from session
 	username = session['username']
 	print "Current action is:",action
 
-	if action == "s_del":
-		'''
-		expecting all or array
-		'''
-		print "Deleting PIDs..."
-
+	# select all
 	if action == "s_all":
 		print "All PIDs selected..."
-
+		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "selected"})
+	# select none
 	if action == "s_none":
 		print "All PIDs unselected..."
+		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "unselected"})
+	# select toggle
+	if action == "s_toggle":
+		print "All PIDs toggling..."
+		PIDs = models.user_pids.query.filter_by(username=username)
+		for PID in PIDs:
+			if PID.status == "unselected":
+				PID.status = "selected"
+			elif PID.status == "selected":
+				PID.status = "unselected"
+	# delete selections
+	if action == "s_del":
+		db.session.query(models.user_pids).filter(models.user_pids.username == username, models.user_pids.status == "selected").delete()
+
+
+	# commit changes
+	db.session.commit()
+
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSQL.html",username=username)
+	return redirect("/PIDmanage")
 
 
 @app.route("/PIDRowUpdate/<id>/<action>/<status>")
@@ -323,6 +337,7 @@ def PIDRowUpdate(id,action,status):
 	# get username from session
 	username = session['username']
 
+	# update single row status
 	if action == "update_status":
 		# get PID with query
 		PID = models.user_pids.query.filter(models.user_pids.id == id)[0]
@@ -336,6 +351,10 @@ def PIDRowUpdate(id,action,status):
 			PID.status = status
 		# commit
 		db.session.commit()
+
+	# delete single row
+	if action == "delete":
+		print "deleting row for user"
 
 
 	return "PID updated."
