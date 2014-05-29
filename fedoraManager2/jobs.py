@@ -63,7 +63,7 @@ def updateSQLJobStatus(job_num):
 def sendUserPIDs(username,PIDs):
 	print "Storing selected PIDs for {username}".format(username=username)				
 	for PID in PIDs:
-		db.session.add(models.user_pids(PID,username))	
+		db.session.add(models.user_pids(PID,username,"unselected"))	
 	db.session.commit() # a failed commit while fail the whole lot
 	print "PIDs stored"	
 

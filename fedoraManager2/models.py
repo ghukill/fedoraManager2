@@ -23,10 +23,12 @@ class user_pids(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	PID = db.Column(db.String(255), unique=True)
 	username = db.Column(db.String(255))
+	status = db.Column(db.String(64))
 
-	def __init__(self, PID, username):
+	def __init__(self, PID, username, status):
 		self.PID = PID        
 		self.username = username
+		self.status = status
 
 	def __repr__(self):    	
 		return '<PID {PID}, username {username}>'.format(PID=self.PID,username=self.username)

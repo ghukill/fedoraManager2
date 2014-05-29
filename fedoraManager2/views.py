@@ -303,16 +303,43 @@ def PIDmanageAction(action):
 	print "Current action is:",action
 
 	if action == "s_del":
-		print "doing delete things here"
+		'''
+		expecting all or array
+		'''
+		print "Deleting PIDs..."
 
 	if action == "s_all":
-		print "selecting all of them"
+		print "All PIDs selected..."
 
 	if action == "s_none":
-		print "selection none of them"
+		print "All PIDs unselected..."
 
 	# pass the current PIDs to page as list	
 	return render_template("PIDSQL.html",username=username)
+
+
+@app.route("/PIDRowUpdate/<id>/<action>/<status>")
+def PIDRowUpdate(id,action,status):
+	# get username from session
+	username = session['username']
+
+	if action == "update_status":
+		# get PID with query
+		PID = models.user_pids.query.filter(models.user_pids.id == id)[0]
+		# update
+		if status == "toggle":
+			if PID.status == "unselected":
+				PID.status = "selected"
+			elif PID.status == "selected":
+				PID.status = "unselected"
+		else:
+			PID.status = status
+		# commit
+		db.session.commit()
+
+
+	return "PID updated."
+
 
 
 # Catch all - DON'T REMOVE
