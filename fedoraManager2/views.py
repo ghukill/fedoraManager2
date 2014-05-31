@@ -8,6 +8,7 @@ from fedoraManager2.actions import actions
 from flask import render_template, request, session, redirect, make_response
 from flask.ext.sqlalchemy import SQLAlchemy
 
+
 # forms
 from flask_wtf import Form
 from wtforms import TextField
@@ -76,12 +77,24 @@ def userPage(username):
 # epecting task function name from actions module, e.g. "sampleTask"
 @app.route("/fireTask/<task_name>")
 def fireTask(task_name):
-	print "Starting taskv3 request..."
+	print "Starting task request..."
 	
 	# get username from session (will pull from user auth session later)
 	username = session['username']	
-	# get total PIDs associated with user
-	userPID_pag = models.user_pids.query.filter_by(username=username).paginate(1,5)
+	# get total SELECTED PIDs associated with user
+	# # start timer
+	stime = time.time()
+	userSelectedPIDs = models.user_pids.query.filter_by(username=username,status="selected")	
+	PIDlist = []
+	for PID in userSelectedPIDs:
+		PIDlist.append(PID.PID)
+	etime = time.time()
+	ttime = (etime - stime) * 1000
+	print "Took this long to create list from SQL query",ttime,"ms"
+
+	# if no PIDs selected, abort
+	if userSelectedPIDs.count() == 0:
+		return "<p>No PIDs selected, try again.  Try selecting <a href='/PIDmanage'>here</a>.</p>"
 
 	# instatiate jobHand object with incrementing job_num
 	jobInit = jobs.jobStart()
@@ -96,10 +109,10 @@ def fireTask(task_name):
 	db.session.commit() 
 
 	# begin job
-	print "Antipcating",userPID_pag.total,"tasks...."
+	print "Antipcating",userSelectedPIDs.count(),"tasks...."
 	# push estimated tasks to jobHand and taskHand
-	jobHand.estimated_tasks = userPID_pag.total
-	taskHand.estimated_tasks = userPID_pag.total
+	jobHand.estimated_tasks = userSelectedPIDs.count()
+	taskHand.estimated_tasks = userSelectedPIDs.count()
 	
 	# create job_package
 	job_package = {		
@@ -114,7 +127,7 @@ def fireTask(task_name):
 	# send to celeryTaskFactory in actions.py
 	# iterates through PIDs and creates secondary async tasks for each
 	# passing username, task_name, task_function as imported above, and job_package containing all the update handles		
-	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package)
+	result = actions.celeryTaskFactory.delay(job_num=job_num,task_name=task_name,task_function=task_function,job_package=job_package,PIDlist=PIDlist)
 
 	# preliminary update
 	jobs.jobUpdate(jobHand)		
@@ -188,10 +201,9 @@ def jobStatus(job_num):
 @app.route("/userJobs")
 def userJobs():
 
-	username = session['username']
+	username = session['username']	
 
 	# get user jobs
-	# user_jobs_list = models.user_jobs.query.filter_by(username=username="complete").filter(models.user_jobs.status != "complete")
 	user_jobs_list = models.user_jobs.query.filter(models.user_jobs.status != "complete", models.user_jobs.username == username)
 
 	# return package
@@ -255,6 +267,29 @@ def userJobs():
 		return resp
 	else:
 		return render_template("userJobs.html",username=session['username'])
+
+
+@app.route("/userAllJobs")
+def userAllJobs():
+
+	username = session['username']
+
+	# get user jobs
+	user_jobs_list = models.user_jobs.query.filter(models.user_jobs.username == username)
+
+	# return package
+	return_package = []
+
+	for job in user_jobs_list:
+
+		job_package = {}
+		job_package['job_num'] = job.job_num		
+		job_package['status'] = job.status
+
+		# push to return package
+		return_package.append(job_package)
+		
+	return render_template("userAllJobs.html",username=session['username'],return_package=return_package)
 
 
 # PID MANAGEMENT
@@ -350,6 +385,7 @@ def PIDRowUpdate(id,action,status):
 
 	# commit
 	db.session.commit()
+	print "SQL updated at the row level ."
 
 	return "PID updated."
 

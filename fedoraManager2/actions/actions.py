@@ -17,34 +17,53 @@ def celeryTaskFactory(**kwargs):
 	
 	# create job_package
 	job_package = kwargs['job_package']
+	print job_package['jobHand'].assigned_tasks
 
 	# get username
 	username = job_package['username']
 
-	# get and iterate through user selectedPIDs
-	# userPID_pag = models.user_pids.query.paginate(1,5)
-	userPID_pag = models.user_pids.query.filter_by(username=username).paginate(1,5)
+	# # get and iterate through user selectedPIDs
+	# # PAGINATION - MAYBE NOT NECESSARY
+	# userPID_pag = models.user_pids.query.filter_by(username=username,status="selected").paginate(1,5)
 	
-	step = 1	
-	while userPID_pag.page < (userPID_pag.pages + 1):
+	# step = 1	
+	# while userPID_pag.page < (userPID_pag.pages + 1):
 		
-		# iterate through PIDs in userPID_pag page
-		for PID in userPID_pag.items:			
-			print "Operating on PID:",PID.PID," / Step:",step		
-			job_package['step'] = step			
-			# fire off async task		
-			result = kwargs['task_function'].delay(job_package)				
-			# push result to jobHand
-			job_package['jobHand'].assigned_tasks.append(result)
-			# updates jobHand in redis so that polling process get up-to-date reflection of tasks added
-			jobs.jobUpdate(job_package['jobHand'])
-			step += 1
+	# 	# iterate through PIDs in userPID_pag page
+	# 	for PID in userPID_pag.items:			
+	# 		print "Operating on PID:",PID.PID," / Step:",step		
+	# 		job_package['step'] = step			
+	# 		# fire off async task		
+	# 		result = kwargs['task_function'].delay(job_package)				
+	# 		# push result to jobHand
+	# 		job_package['jobHand'].assigned_tasks.append(result)
+	# 		# updates jobHand in redis so that polling process get up-to-date reflection of tasks added
+	# 		jobs.jobUpdate(job_package['jobHand'])
+	# 		step += 1
 
-		# next page
-		userPID_pag = userPID_pag.next()
-		print "next page..."		
+	# 	# next page
+	# 	userPID_pag = userPID_pag.next()
+	# 	print "next page..."	
 
+	# get and iterate through user selectedPIDs
+	# NO PAGINATION				
+	PIDlist = kwargs['PIDlist']	
+	
+	step = 1		
+		
+	# iterate through PIDs in userPID_pag page
+	for PID in PIDlist:			
+		print "Operating on PID:",PID," / Step:",step		
+		job_package['step'] = step			
+		# fire off async task		
+		result = kwargs['task_function'].delay(job_package)				
+		# push result to jobHand
+		job_package['jobHand'].assigned_tasks.append(result)
+		# updates jobHand in redis so that polling process get up-to-date reflection of tasks added
+		jobs.jobUpdate(job_package['jobHand'])
+		step += 1
 
+	print "Finished assigning tasks"
 
 @celery.task()
 def sampleTask(job_package):
@@ -53,7 +72,8 @@ def sampleTask(job_package):
 	print "Starting sampleTask",job_package['step']
 	
 	# delay for testing	
-	time.sleep(.25)	
+	# because tasks are launched async, this pause will affect the task, but will not compound for all tasks
+	time.sleep(5)	
 	
 	# update taskHand about task	
 	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
