@@ -38,8 +38,11 @@ app.secret_key = 'ShoppingHorse'
 
 @app.route("/")
 def index():
-	return render_template("index.html")
-	
+	if "username" in session:
+		username = session['username']
+	else:
+		username = "User not set."
+	return render_template("index.html",username=username)
 
 
 # @app.route("/task_status/<task_id>")
@@ -55,18 +58,6 @@ def index():
 
 # 	return "You are looking for {task_id}".format(task_id=task_id)		
 
-
-
-# Session Testing
-@app.route("/sessionSet/<username>")
-def sessionSet(name):	
-	session['username'] = username
-	return "You have changed the session username to {username}.".format(username=username)
-
-@app.route("/sessionCheck")
-def sessionCheck():		
-	username = session['username']
-	return "You have retrieved the session username {username}.".format(username=username)
 
 @app.route('/userPage/<username>')
 def userPage(username):
@@ -279,7 +270,7 @@ def PIDselectionSQL():
 	if request.method == 'POST':		 
 		PID = form.PID.data				
 		jobs.sendUserPIDs(username,PID)
-		return redirect("/PIDmanage/1")		
+		return redirect("/PIDmanage")		
 
 	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
 
@@ -323,10 +314,8 @@ def PIDmanageAction(action):
 	if action == "s_del":
 		db.session.query(models.user_pids).filter(models.user_pids.username == username, models.user_pids.status == "selected").delete()
 
-
 	# commit changes
 	db.session.commit()
-
 
 	# pass the current PIDs to page as list	
 	return redirect("/PIDmanage")
@@ -343,19 +332,24 @@ def PIDRowUpdate(id,action,status):
 		PID = models.user_pids.query.filter(models.user_pids.id == id)[0]
 		# update
 		if status == "toggle":
+			# where PID.status equals current status in SQL
 			if PID.status == "unselected":
 				PID.status = "selected"
 			elif PID.status == "selected":
 				PID.status = "unselected"
 		else:
 			PID.status = status
-		# commit
-		db.session.commit()
+		
 
 	# delete single row
 	if action == "delete":
-		print "deleting row for user"
+		# get PID with query
+		PID = models.user_pids.query.filter(models.user_pids.id == id)[0]
+		db.session.delete(PID)
+		print "Deleted PID id#",id,"from SQL database"
 
+	# commit
+	db.session.commit()
 
 	return "PID updated."
 

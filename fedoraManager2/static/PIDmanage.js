@@ -20,31 +20,37 @@ function paintTable(username){
 		    {
 		    	"name":"status",
 		    	"visible":false
-		    }		    
+		    },
+		    {
+		    	"name":"actions",
+		    	"title":"actions",		    	
+		    	"render":function (data,type,row){		    				    		
+		    		return "<a href='#' onclick='del_row("+row[0]+"); return false;'>remove</a>";
+		    	}		    	
+		    }	    
 		  ],
+		searchCols: [
+	        null,
+	        null,	        
+	        { sSearch: username },
+	        null,
+	        null
+	    ],
 		"rowCallback": function( row, data, displayIndex ) {
             if ( data[3] == "selected" ) {            	
                 $(row).addClass('selected');                
             }
         }
 	} );
-
+	
+	// LEAVE FOR REFERENCE, searchCols WORKING ABOVE PER BUG FIX IN DATATABLES
 	// filter only the user
-	table_handle.columns(2).search(username).draw();	
+	// https://datatables.net/forums/discussion/comment/61834#Comment_61834
+	// table_handle.columns(2).search(username).draw();	
 
-	// selects rows
-	$('#example tbody').on('click', 'tr', function () {	  		
-	    // OLD
-	    // var id = $(this).children()[0].innerHTML;    
-	    // var index = $.inArray(id, selected);
-	    // if ( index === -1 ) {
-	    //     selected.push( id );
-	    // } else {
-	    //     selected.splice( index, 1 );
-	    // }
-	    // $(this).toggleClass('selected');
+	// selects row
+	$('#example tbody').on('click', 'tr', function () {
 
-	    // NEW
 	    var id = $(this).children()[0].innerHTML;	    
 		$.ajax({
 			url: "/PIDRowUpdate/"+id+"/update_status/toggle",			
@@ -53,20 +59,20 @@ function paintTable(username){
 			table_handle.draw();			
 		});
 	} );
+
+
  
     // $('#button').click( function () {
     //     alert( table.rows('.selected').data().length +' row(s) selected' );
     // } );
 }
 
-function s_all_true(){
-	
-}
-
-function s_all_false(){
-
-} 
-
-function s_del(){
-	
-}
+// delete row
+function del_row(id){	
+	$.ajax({
+		url: "/PIDRowUpdate/"+id+"/delete/delete",			
+		}).done(function() {
+		$(this).toggleClass('selected');
+		table_handle.draw();			
+	});
+}	
