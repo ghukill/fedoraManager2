@@ -6,6 +6,7 @@ class jobBlob:
 		self.job_num = job_num
 		self.estimated_tasks = ''
 		self.assigned_tasks = []
+		self.assigned_tasks_count = ''
 		self.pending_tasks = []
 		self.completed_tasks = []
 		self.error_tasks = []

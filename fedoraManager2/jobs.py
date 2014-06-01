@@ -36,6 +36,12 @@ def jobGet(job_num):
 	jobHand = pickle.loads(jobHand_pickled)	
 	return jobHand
 
+def jobUpdateAssignedCount(job_num):
+	r_job_handle.incr("job_{job_num}_assign_count".format(job_num=job_num))
+
+def jobUpdateCompletedCount(job_num):
+	r_job_handle.incr("job_{job_num}_complete_count".format(job_num=job_num))
+
 # task objects
 def taskUpdate(taskHand):		
 	taskHand_pickled = pickle.dumps(taskHand)				

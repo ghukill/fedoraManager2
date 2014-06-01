@@ -22,6 +22,9 @@ def celeryTaskFactory(**kwargs):
 	# get username
 	username = job_package['username']
 
+	# get job_num
+	job_num = kwargs['job_num']
+
 	# get and iterate through user selectedPIDs
 	# NO PAGINATION				
 	PIDlist = kwargs['PIDlist']	
@@ -35,9 +38,22 @@ def celeryTaskFactory(**kwargs):
 		# fire off async task		
 		result = kwargs['task_function'].delay(job_package)				
 		# push result to jobHand
-		job_package['jobHand'].assigned_tasks.append(result)
-		# updates jobHand in redis so that polling process get up-to-date reflection of tasks added
-		jobs.jobUpdate(job_package['jobHand'])
+		'''
+		This is the main problem:
+			adding async.result to the jobHand each time
+			this is creating ENORMOUS package for redis
+		'''
+		# OLD
+		#######################################
+		# job_package['jobHand'].assigned_tasks.append(result)
+		# # updates jobHand in redis so that polling process get up-to-date reflection of tasks added
+		# jobs.jobUpdate(job_package['jobHand'])
+			
+		# NEW
+		#######################################
+		jobs.jobUpdateAssignedCount(job_num)
+
+
 		step += 1
 
 	print "Finished assigning tasks"
@@ -55,6 +71,10 @@ def sampleTask(job_package):
 	# update taskHand about task	
 	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
 
+	# NEW
+	# increments completed tasks
+	jobs.jobUpdateCompletedCount(job_package['job_num'])
+
 	# return results
 	return 40 + 2
 
@@ -70,6 +90,10 @@ def sampleFastTask(job_package):
 	
 	# update taskHand about task	
 	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
+
+	# NEW
+	# increments completed tasks
+	jobs.jobUpdateCompletedCount(job_package['job_num'])
 
 	# return results
 	return 40 + 2

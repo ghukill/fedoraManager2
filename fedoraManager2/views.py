@@ -2,6 +2,7 @@ from fedoraManager2 import app
 from fedoraManager2 import models
 from fedoraManager2 import db
 from fedoraManager2.actions import actions
+from fedoraManager2 import redisHandles
 
 
 # flask proper
@@ -98,6 +99,7 @@ def fireTask(task_name):
 
 	# instatiate jobHand object with incrementing job_num
 	jobInit = jobs.jobStart()
+	
 	jobHand = jobInit['jobHand']
 	taskHand = jobInit['taskHand']
 
@@ -108,12 +110,21 @@ def fireTask(task_name):
 	db.session.add(models.user_jobs(job_num,username, "init"))	
 	db.session.commit() 
 
+	# OLD STYLE
+	#########################################################
+	# # begin job
+	# print "Antipcating",userSelectedPIDs.count(),"tasks...."
+	# # push estimated tasks to jobHand and taskHand
+	# jobHand.estimated_tasks = userSelectedPIDs.count()
+	# taskHand.estimated_tasks = userSelectedPIDs.count()
+	
+	# NEW STYLE
+	#########################################################
 	# begin job
 	print "Antipcating",userSelectedPIDs.count(),"tasks...."
-	# push estimated tasks to jobHand and taskHand
-	jobHand.estimated_tasks = userSelectedPIDs.count()
-	taskHand.estimated_tasks = userSelectedPIDs.count()
-	
+	# set estimated
+	redisHandles.r_job_handle.set("job_{job_num}_est_count".format(job_num=job_num),userSelectedPIDs.count())
+
 	# create job_package
 	job_package = {		
 		"username":username,
@@ -217,41 +228,81 @@ def userJobs():
 		status_package = {}
 		status_package["job_num"] = job_num #this is pulled from SQL table
 
-		# get job
-		jobHand = jobs.jobGet(job_num)
-		taskHand = jobs.taskGet(job_num)
+		'''
+		Might need to look into not storing all async results in redis jobHand
+		Might need to go back to number, memory is getting borked
+		'''
+		# OLD
+		####################################################
+
+		# # get job
+		# jobHand = jobs.jobGet(job_num)
+		# taskHand = jobs.taskGet(job_num)		
+
+		# # spooling, works on stable jobHand object
+		# if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
+		# 	# print "Job spooling..."
+		# 	status_package['job_status'] = "spooling"
+		# 	job.status = "spooling"
+
+		# # check if pending
+		# elif len(taskHand.completed_tasks) == 0:
+		# 	# print "Job Pending, waiting for others to complete.  Isn't that polite?"
+		# 	status_package['job_status'] = "pending"	
+		# 	job.status = "pending"	
+
+		# # check if completed
+		# elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:						
+		# 	status_package['job_status'] = "complete"	
+		# 	# udpate job status in SQL db here
+		# 	job.status = "complete"
+		# 	print "Job Complete!  Updated in SQL."
+
+		# # else, must be running
+		# else:
+		# 	status_package['job_status'] = "running"			
+
+		####################################################
+		# NEW
+		# get estimated tasks
+		job_est_count = redisHandles.r_job_handle.get("job_{job_num}_est_count".format(job_num=job_num))
+		# get assigned tasks
+		job_assign_count = redisHandles.r_job_handle.get("job_{job_num}_assign_count".format(job_num=job_num))
+		# get completed tasks
+		job_complete_count = redisHandles.r_job_handle.get("job_{job_num}_complete_count".format(job_num=job_num))
+		if job_complete_count == None:
+			job_complete_count = 0
 
 		# spooling, works on stable jobHand object
-		if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
+		if job_assign_count > 0 and job_assign_count < job_est_count :
 			# print "Job spooling..."
 			status_package['job_status'] = "spooling"
 			job.status = "spooling"
 
 		# check if pending
-		elif len(taskHand.completed_tasks) == 0:
+		elif job_complete_count == 0:
 			# print "Job Pending, waiting for others to complete.  Isn't that polite?"
 			status_package['job_status'] = "pending"	
 			job.status = "pending"	
 
 		# check if completed
-		elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:						
+		elif job_complete_count == job_est_count:						
 			status_package['job_status'] = "complete"	
 			# udpate job status in SQL db here
 			job.status = "complete"
 			print "Job Complete!  Updated in SQL."
 
-
 		# else, must be running
 		else:
-			status_package['job_status'] = "running"			
+			status_package['job_status'] = "running"	
 
 		# data return 
 		response_dict = {
 			"job_num":job_num,
 			"job_status":status_package['job_status'],
-			"assigned_tasks":len(jobHand.assigned_tasks),
-			"completed_tasks":len(taskHand.completed_tasks),
-			"estimated_tasks":taskHand.estimated_tasks
+			"assigned_tasks":job_assign_count,
+			"completed_tasks":job_complete_count,
+			"estimated_tasks":job_est_count
 		}
 
 		# return_package[status_package["job_num"]] = response_dict		
