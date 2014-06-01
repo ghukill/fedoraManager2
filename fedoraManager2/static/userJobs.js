@@ -1,6 +1,6 @@
 // likely be removed if moving to prettier tempating
 function exportJobStatus(job_package){
-	return "Job #"+job_package.job_num+": "+job_package.completed_tasks+" / "+job_package.estimated_tasks+" - "+job_package.job_status;
+	return "Job #"+job_package.job_num+": "+job_package.completed_tasks+" / "+job_package.estimated_tasks+" - "+job_package.job_status+" - (assigned: "+job_package.assigned_tasks+")";
 }
 
 // function to perform polling, requires wait_time variable	

@@ -21,7 +21,12 @@ class taskBlob:
 
 class user_pids(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	PID = db.Column(db.String(255), unique=True)
+	'''
+	making this NOT unique for now, need to allow multiple users to select the same PID
+		unique=True
+	* will want to think about a way to ensure the same PID is not worked on at the same time
+	'''
+	PID = db.Column(db.String(255)) 
 	username = db.Column(db.String(255))
 	status = db.Column(db.String(64))
 

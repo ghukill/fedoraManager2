@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, MetaData
 # create app
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://fm2:fm2@localhost/fedoraManager2'
-
+app.config['C_FORCE_ROOT'] = "True"
 app.debug = True
 
 #setup db

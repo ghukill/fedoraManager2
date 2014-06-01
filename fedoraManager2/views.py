@@ -249,6 +249,7 @@ def userJobs():
 		response_dict = {
 			"job_num":job_num,
 			"job_status":status_package['job_status'],
+			"assigned_tasks":len(jobHand.assigned_tasks),
 			"completed_tasks":len(taskHand.completed_tasks),
 			"estimated_tasks":taskHand.estimated_tasks
 		}
@@ -331,6 +332,9 @@ def PIDmanageAction(action):
 	# select all
 	if action == "s_all":
 		print "All PIDs selected..."
+		'''
+		Quite slow, and CPU intensive for 100,000+ PIDs
+		'''
 		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "selected"})
 	# select none
 	if action == "s_none":
