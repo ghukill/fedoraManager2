@@ -47,18 +47,15 @@ def index():
 	return render_template("index.html",username=username)
 
 
-# @app.route("/task_status/<task_id>")
-# def task_status(task_id):
+@app.route("/task_status/<task_id>")
+def task_status(task_id):
 	
-# 	# global way to surgically pick task out of celery memory		
-# 	result = actions.celery.AsyncResult(task_id)	
-# 	state, retval = result.state, result.result
-# 	response_data = dict(id=task_id, status=state, result=retval)
+	# global way to surgically pick task out of celery memory		
+	result = actions.celery.AsyncResult(task_id)	
+	state, retval = result.state, result.result
+	response_data = dict(id=task_id, status=state, result=retval)
 	
-# 	return json.dumps(response_data)
-
-
-# 	return "You are looking for {task_id}".format(task_id=task_id)		
+	return json.dumps(response_data)	
 
 
 @app.route('/userPage/<username>')

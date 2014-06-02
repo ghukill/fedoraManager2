@@ -1,4 +1,5 @@
 from cl.cl import celery
+from celery import Task
 import redis
 
 import fedoraManager2.jobs as jobs
@@ -10,6 +11,20 @@ import time
 import sys
 
 
+class DebugTask(Task):
+	abstract = True
+	def after_return(self, *args, **kwargs):
+
+		# print args
+		print args
+		status = args[0]
+		task_id = args[2]
+		task_details = args[3]
+		step = task_details[0]['step']
+		job_num = task_details[0]['job_num']
+
+		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)
+		# print('Task returned: {0!r}'.format(self.request))
 
 
 @celery.task()
@@ -25,8 +40,7 @@ def celeryTaskFactory(**kwargs):
 	# get job_num
 	job_num = kwargs['job_num']
 
-	# get and iterate through user selectedPIDs
-	# NO PAGINATION				
+	# get and iterate through user selectedPIDs			
 	PIDlist = kwargs['PIDlist']	
 	
 	step = 1		
@@ -36,42 +50,30 @@ def celeryTaskFactory(**kwargs):
 		# print "Operating on PID:",PID," / Step:",step		
 		job_package['step'] = step			
 		# fire off async task		
-		result = kwargs['task_function'].delay(job_package)				
-		# push result to jobHand
-		'''
-		This is the main problem:
-			adding async.result to the jobHand each time
-			this is creating ENORMOUS package for redis
-		'''
-		# OLD
-		#######################################
-		# job_package['jobHand'].assigned_tasks.append(result)
-		# # updates jobHand in redis so that polling process get up-to-date reflection of tasks added
-		# jobs.jobUpdate(job_package['jobHand'])
+		result = kwargs['task_function'].delay(job_package)		
+		task_id = result.id
+		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "FIRED")
 			
-		# NEW
-		#######################################
+		# update incrementer for total assigned
 		jobs.jobUpdateAssignedCount(job_num)
 
-
+		# bump step
 		step += 1
 
 	print "Finished assigning tasks"
 
-@celery.task()
+@celery.task(base=DebugTask)
 def sampleTask(job_package):
 
-	username = job_package['username']
-	# print "Starting sampleTask",job_package['step']
+	username = job_package['username']	
 	
 	# delay for testing	
-	# because tasks are launched async, this pause will affect the task, but will not compound for all tasks
+	# because tasks are launched async, this pause will affect the task, but will not compound for all tasks	
 	time.sleep(5)	
 	
-	# update taskHand about task	
-	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
-
-	# NEW
+	# update about task	
+	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
+	
 	# increments completed tasks
 	jobs.jobUpdateCompletedCount(job_package['job_num'])
 
@@ -79,45 +81,19 @@ def sampleTask(job_package):
 	return 40 + 2
 
 
-@celery.task()
+@celery.task(base=DebugTask)
 def sampleFastTask(job_package):
 
-	username = job_package['username']
-	# print "Starting sampleFastTask",job_package['step']
+	username = job_package['username']		
 	
-	# delay for testing	
-	# time.sleep(.25)	
+	# update about task	
+	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
 	
-	# update taskHand about task	
-	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "triggered")	
-
-	# NEW
 	# increments completed tasks
 	jobs.jobUpdateCompletedCount(job_package['job_num'])
 
 	# return results
 	return 40 + 2
-
-
-
-
-
-
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
