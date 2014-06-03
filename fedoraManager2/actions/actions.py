@@ -11,20 +11,30 @@ import time
 import sys
 
 
+# Class that updates task status in redis *after* task is complete
 class DebugTask(Task):
 	abstract = True
 	def after_return(self, *args, **kwargs):
 
-		# print args
-		print args
+		# extract task data		
 		status = args[0]
 		task_id = args[2]
 		task_details = args[3]
 		step = task_details[0]['step']
 		job_num = task_details[0]['job_num']
 
-		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)
-		# print('Task returned: {0!r}'.format(self.request))
+		# debug printing
+		print "TASK DETAILS:","status:",status," / task_id:",task_id," / task details:",task_details,"/ step:",step," / job number:",job_num
+
+		# update job with task completion				
+		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)	
+	
+		# increments completed tasks
+		jobs.jobUpdateCompletedCount(job_num)
+
+		# save task status in redis
+		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)		
+		
 
 
 @celery.task()
@@ -71,12 +81,12 @@ def sampleTask(job_package):
 	# because tasks are launched async, this pause will affect the task, but will not compound for all tasks	
 	time.sleep(5)	
 	
-	# update about task	
-	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
+	# # update about task	
+	# redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")			
 	
-	# increments completed tasks
-	jobs.jobUpdateCompletedCount(job_package['job_num'])
-
+	# # increments completed tasks
+	# jobs.jobUpdateCompletedCount(job_package['job_num'])
+	
 	# return results
 	return 40 + 2
 
@@ -86,11 +96,11 @@ def sampleFastTask(job_package):
 
 	username = job_package['username']		
 	
-	# update about task	
-	redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
+	# # update about task	
+	# redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
 	
-	# increments completed tasks
-	jobs.jobUpdateCompletedCount(job_package['job_num'])
+	# # increments completed tasks
+	# jobs.jobUpdateCompletedCount(job_package['job_num'])
 
 	# return results
 	return 40 + 2
