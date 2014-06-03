@@ -12,7 +12,7 @@ import sys
 
 
 # Class that updates task status in redis *after* task is complete
-class DebugTask(Task):
+class postTask(Task):
 	abstract = True
 	def after_return(self, *args, **kwargs):
 
@@ -24,7 +24,7 @@ class DebugTask(Task):
 		job_num = task_details[0]['job_num']
 
 		# debug printing
-		print "TASK DETAILS:","status:",status," / task_id:",task_id," / task details:",task_details,"/ step:",step," / job number:",job_num
+		# print "TASK DETAILS:","status:",status," / task_id:",task_id," / task details:",task_details,"/ step:",step," / job number:",job_num
 
 		# update job with task completion				
 		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)	
@@ -72,35 +72,29 @@ def celeryTaskFactory(**kwargs):
 
 	print "Finished assigning tasks"
 
-@celery.task(base=DebugTask)
+@celery.task(base=postTask)
 def sampleTask(job_package):
 
 	username = job_package['username']	
 	
+	'''
+	This is where all the action for the task will take place.
+	'''
+
 	# delay for testing	
 	# because tasks are launched async, this pause will affect the task, but will not compound for all tasks	
 	time.sleep(5)	
-	
-	# # update about task	
-	# redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")			
-	
-	# # increments completed tasks
-	# jobs.jobUpdateCompletedCount(job_package['job_num'])
 	
 	# return results
 	return 40 + 2
 
 
-@celery.task(base=DebugTask)
+@celery.task(base=postTask)
 def sampleFastTask(job_package):
 
 	username = job_package['username']		
 	
-	# # update about task	
-	# redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "fired")	
 	
-	# # increments completed tasks
-	# jobs.jobUpdateCompletedCount(job_package['job_num'])
 
 	# return results
 	return 40 + 2

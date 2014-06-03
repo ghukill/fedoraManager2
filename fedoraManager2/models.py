@@ -28,7 +28,8 @@ class user_pids(db.Model):
 	* will want to think about a way to ensure the same PID is not worked on at the same time
 	'''
 	PID = db.Column(db.String(255)) 
-	username = db.Column(db.String(255))
+	username = db.Column(db.String(255))	
+	# consider making status TINYINT, either 0 or 1
 	status = db.Column(db.String(64))
 
 	def __init__(self, PID, username, status):

@@ -1,14 +1,13 @@
+# fm2
 from fedoraManager2 import app
 from fedoraManager2 import models
 from fedoraManager2 import db
 from fedoraManager2.actions import actions
 from fedoraManager2 import redisHandles
 
-
 # flask proper
 from flask import render_template, request, session, redirect, make_response
 from flask.ext.sqlalchemy import SQLAlchemy
-
 
 # forms
 from flask_wtf import Form
@@ -17,12 +16,14 @@ from wtforms import TextField
 # zato paginator
 from zato.redis_paginator import ListPaginator, ZSetPaginator
 
+# python modules
 import time
 import json
 import pickle
 import sys
-import importlib
-import pprint
+# import importlib
+# import pprint
+from uuid import uuid4
 
 # get celery instance / handle
 from cl.cl import celery
@@ -30,7 +31,6 @@ import jobs
 import forms
 from redisHandles import *
 
-from uuid import uuid4
 
 # fake session data
 ####################################
@@ -106,17 +106,7 @@ def fireTask(task_name):
 	# send job to user_jobs SQL table
 	db.session.add(models.user_jobs(job_num,username, "init"))	
 	db.session.commit() 
-
-	# OLD STYLE
-	#########################################################
-	# # begin job
-	# print "Antipcating",userSelectedPIDs.count(),"tasks...."
-	# # push estimated tasks to jobHand and taskHand
-	# jobHand.estimated_tasks = userSelectedPIDs.count()
-	# taskHand.estimated_tasks = userSelectedPIDs.count()
 	
-	# NEW STYLE
-	#########################################################
 	# begin job
 	print "Antipcating",userSelectedPIDs.count(),"tasks...."
 	# set estimated
@@ -150,60 +140,10 @@ def fireTask(task_name):
 def jobStatus(job_num):	
 	'''
 	Look into making this more detailed for the job, perhaps this is where the logs will be monitored
+	This could be breakdown of success and errors too...
+	COPY FROM USERJOBS, PREVIOUS CODE IS TOO OLD
 	'''
 	pass	
-	
-	# # start timer
-	# stime = time.time()
-
-	# # create package
-	# status_package = {}
-	# status_package["job_num"] = job_num
-
-	# # get job
-	# jobHand = jobs.jobGet(job_num)
-	# taskHand = jobs.taskGet(job_num)
-	# # taskHand.last_completed_task_num = len(taskHand.completed_tasks)
-
-	# # spooling, works on stable jobHand object
-	# if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
-	# 	# print "Job spooling..."
-	# 	status_package['job_status'] = "spooling"
-
-	# # check if pending
-	# elif len(taskHand.completed_tasks) == 0:
-	# 	# print "Job Pending, waiting for others to complete.  Isn't that polite?"
-	# 	status_package['job_status'] = "pending"		
-
-	# # check if completed
-	# elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:			
-	# 	# print "Job Complete!"
-	# 	status_package['job_status'] = "complete"		
-
-	# # else, must be running
-	# else:
-	# 	status_package['job_status'] = "running"
-	# 	etime = time.time()
-	# 	ttime = (etime - stime) * 1000
-	# 	print "Pending / Completion check took",ttime,"ms"
-
-	# # data return 
-	# if request.args.get("data","") == "true":
-	# 	response_dict = {
-	# 		"job_status":status_package['job_status'],
-	# 		"completed_tasks":len(taskHand.completed_tasks),
-	# 		"estimated_tasks":taskHand.estimated_tasks
-	# 	}
-	# 	json_string = json.dumps(response_dict)
-	# 	print json_string
-	# 	resp = make_response(json_string)
-	# 	resp.headers['Content-Type'] = 'application/json'
-	# 	return resp
-
-	# # render human page (this will probably go the way of the dodo with jobs dashboard)
-	# if request.args.get("jobInit","") == "true":
-	# 	status_package['jobInit'] = "true"
-	# return render_template("jobStatus.html",username=session['username'],status_package=status_package,jobHand=jobHand,taskHand=taskHand)
 
 
 @app.route("/userJobs")
@@ -224,43 +164,7 @@ def userJobs():
 		# create package
 		status_package = {}
 		status_package["job_num"] = job_num #this is pulled from SQL table
-
-		'''
-		Might need to look into not storing all async results in redis jobHand
-		Might need to go back to number, memory is getting borked
-		'''
-		# OLD
-		####################################################
-
-		# # get job
-		# jobHand = jobs.jobGet(job_num)
-		# taskHand = jobs.taskGet(job_num)		
-
-		# # spooling, works on stable jobHand object
-		# if len(jobHand.assigned_tasks) > 0 and len(jobHand.assigned_tasks) < int(jobHand.estimated_tasks) :
-		# 	# print "Job spooling..."
-		# 	status_package['job_status'] = "spooling"
-		# 	job.status = "spooling"
-
-		# # check if pending
-		# elif len(taskHand.completed_tasks) == 0:
-		# 	# print "Job Pending, waiting for others to complete.  Isn't that polite?"
-		# 	status_package['job_status'] = "pending"	
-		# 	job.status = "pending"	
-
-		# # check if completed
-		# elif len(taskHand.completed_tasks) == taskHand.estimated_tasks:						
-		# 	status_package['job_status'] = "complete"	
-		# 	# udpate job status in SQL db here
-		# 	job.status = "complete"
-		# 	print "Job Complete!  Updated in SQL."
-
-		# # else, must be running
-		# else:
-		# 	status_package['job_status'] = "running"			
-
-		####################################################
-		# NEW
+		
 		# get estimated tasks
 		job_est_count = redisHandles.r_job_handle.get("job_{job_num}_est_count".format(job_num=job_num))
 		# get assigned tasks
@@ -384,19 +288,17 @@ def PIDmanageAction(action):
 		Quite slow, and CPU intensive for 100,000+ PIDs
 		'''
 		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "selected"})
+	
 	# select none
 	if action == "s_none":
 		print "All PIDs unselected..."
 		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "unselected"})
-	# select toggle
-	if action == "s_toggle":
+	
+	# select toggle	
+	if action == "s_toggle":		
 		print "All PIDs toggling..."
-		PIDs = models.user_pids.query.filter_by(username=username)
-		for PID in PIDs:
-			if PID.status == "unselected":
-				PID.status = "selected"
-			elif PID.status == "selected":
-				PID.status = "unselected"
+		db.session.execute("UPDATE user_pids SET status = CASE WHEN status = 'unselected' THEN 'selected' ELSE 'unselected' END WHERE username = '{username}';".format(username=username))
+	
 	# delete selections
 	if action == "s_del":
 		db.session.query(models.user_pids).filter(models.user_pids.username == username, models.user_pids.status == "selected").delete()
