@@ -1,3 +1,5 @@
 #that which shall be deleted
 notes.txt
 *.pyc
+*.out
+nohup*.*

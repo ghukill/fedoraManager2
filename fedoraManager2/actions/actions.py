@@ -34,20 +34,7 @@ class postTask(Task):
 		redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=step,job_num=job_num), status)	
 	
 		# increments completed tasks
-		jobs.jobUpdateCompletedCount(job_num)		
-
-
-# # function to 
-# def lockCheck(job_package):
-# 	# check PIDlock
-# 	lock_status = redisHandles.r_PIDlock.exists(job_package['PID'])
-# 	# if locked, divert
-# 	if lock_status == True:		
-# 		# redisHandles.r_job_handle.set("task{step}_job_num{job_num}".format(step=job_package['step'],job_num=job_package['job_num']), "LOCKED")
-# 		raise Exception('PID locked, skipping...');
-# 	else:
-# 		redisHandles.r_PIDlock.set(job_package['PID'],1)
-
+		jobs.jobUpdateCompletedCount(job_num)
 
 
 @celery.task()
@@ -92,8 +79,6 @@ def celeryTaskFactory(**kwargs):
 		step += 1		
 
 	print "Finished assigning tasks"
-
-
 
 
 #TASKS
