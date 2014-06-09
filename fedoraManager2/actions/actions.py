@@ -12,6 +12,9 @@ import sys
 
 
 # Class that updates task status in redis *after* task is complete
+'''
+PID locking: this could "unlock" the PID from SQL table
+'''
 class postTask(Task):
 	abstract = True
 	def after_return(self, *args, **kwargs):
@@ -56,6 +59,9 @@ def celeryTaskFactory(**kwargs):
 	step = 1		
 		
 	# iterate through PIDs in userPID_pag page
+	'''
+	PID locking: check if PID locked in SQL table, otherwise lock
+	'''
 	for PID in PIDlist:			
 		# print "Operating on PID:",PID," / Step:",step		
 		job_package['step'] = step			
@@ -92,9 +98,7 @@ def sampleTask(job_package):
 @celery.task(base=postTask)
 def sampleFastTask(job_package):
 
-	username = job_package['username']		
-	
-	
+	username = job_package['username']
 
 	# return results
 	return 40 + 2
