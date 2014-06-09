@@ -10,11 +10,15 @@ from flask import render_template, request, session, redirect, make_response
 from flask.ext.sqlalchemy import SQLAlchemy
 
 # forms
+# OLD (mitten)
 from flask_wtf import Form
 from wtforms import TextField
+# NEW (silo)
+# from flask.ext.wtf import Form
+# from wtforms.fields import TextField, BooleanField
 
 # zato paginator
-from zato.redis_paginator import ListPaginator, ZSetPaginator
+# from zato.redis_paginator import ListPaginator, ZSetPaginator
 
 # python modules
 import time

@@ -9,7 +9,7 @@ from redisHandles import *
 from fedoraManager2 import db, db_con
 
 # zato paginator
-from zato.redis_paginator import ListPaginator, ZSetPaginator
+# from zato.redis_paginator import ListPaginator, ZSetPaginator
 
 
 # Job Management
