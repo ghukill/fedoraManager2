@@ -1,6 +1,7 @@
 <!-- header -->
 <html>
 <head>
+	<title>fedoraManager2</title>
 	<!-- jquery CDN -->	
 	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 	<!-- jquery data tables -->
@@ -10,4 +11,6 @@
 </head>
 
 <body>
-<p><a href="/userPage/{{username}}">home</a></p>
+	{% if username %}
+		<p><a href="/userPage/{{username}}">{{username}} home</a></p>
+	{% endif %}

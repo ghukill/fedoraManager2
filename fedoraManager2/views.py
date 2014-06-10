@@ -72,6 +72,18 @@ def userPage(username):
 	userData['username'] = username
 	return render_template("userPage.html",userData=userData)
 
+
+# MIGHT WORK WHEN WE HAVE USER LOGIN PAGE...
+# @app.route('/userPage/')
+# def userPage():
+# 	# set username in session
+# 	username = session['username']
+
+# 	# info to render page
+# 	userData = {}
+# 	userData['username'] = username
+# 	return render_template("userPage.html",userData=userData)
+
 # JOB MANAGEMENT
 #########################################################################################################
 
@@ -173,6 +185,8 @@ def userJobs():
 		job_est_count = redisHandles.r_job_handle.get("job_{job_num}_est_count".format(job_num=job_num))
 		# get assigned tasks
 		job_assign_count = redisHandles.r_job_handle.get("job_{job_num}_assign_count".format(job_num=job_num))
+		if job_assign_count == None:
+			job_assign_count = 0
 		# get completed tasks
 		job_complete_count = redisHandles.r_job_handle.get("job_{job_num}_complete_count".format(job_num=job_num))
 		if job_complete_count == None:
@@ -252,8 +266,15 @@ def userAllJobs():
 # PID MANAGEMENT
 ####################################################################################
 
-@app.route("/PIDselectionSQL", methods=['POST', 'GET'])
-def PIDselectionSQL():	
+@app.route("/PIDselection", methods=['POST', 'GET'])
+def PIDselection():
+	# get username from session
+	username = session['username']
+	return render_template('PIDselection.html', username=username)
+
+
+@app.route("/PIDenter", methods=['POST', 'GET'])
+def PIDenter():	
 
 	# get username from session
 	username = session['username']
@@ -265,6 +286,7 @@ def PIDselectionSQL():
 		return redirect("/PIDmanage")		
 
 	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
+
 
 # PID check for user
 @app.route("/PIDmanage")
@@ -348,8 +370,26 @@ def PIDRowUpdate(id,action,status):
 	return "PID updated."
 
 
+# PID check for user
+@app.route("/PIDSolr")
+def PIDSolr():	
+	# get username from session
+	username = session['username']
+	# set action to 'view'
+	action = "view"
+	print "Current action is:",action
 
+	# pass the current PIDs to page as list	
+	return render_template("PIDSQL.html",username=username)
+
+
+
+
+
+
+######################################################
 # Catch all - DON'T REMOVE
+######################################################
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):    

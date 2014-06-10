@@ -61,7 +61,7 @@ def celeryTaskFactory(**kwargs):
 		
 	# iterate through PIDs 	
 	for PID in PIDlist:
-		time.sleep(.01)		
+		time.sleep(.001)		
 
 		# OLD, WORKING
 		# print "Operating on PID:",PID," / Step:",step		
