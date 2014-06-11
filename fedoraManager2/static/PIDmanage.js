@@ -35,12 +35,13 @@ function paintTable(username){
 	        { sSearch: username },
 	        null,
 	        null
-	    ],
+	    ],	    
 		"rowCallback": function( row, data, displayIndex ) {
             if ( data[3] == "selected" ) {            	
                 $(row).addClass('selected');                
             }
-        }
+        },
+        start:1
 	} );
 	
 	// LEAVE FOR REFERENCE, searchCols WORKING ABOVE PER BUG FIX IN DATATABLES
@@ -50,13 +51,16 @@ function paintTable(username){
 
 	// selects row
 	$('#example tbody').on('click', 'tr', function () {
-
 	    var id = $(this).children()[0].innerHTML;	    
 		$.ajax({
 			url: "/PIDRowUpdate/"+id+"/update_status/toggle",			
 			}).done(function() {
 			$(this).toggleClass('selected');
-			table_handle.draw();			
+			var cpage = table_handle.page();
+			console.log(cpage);
+			table_handle.draw()
+			// $("a[data-dt-idx="+(cpage+1)+"]").click();						
+			$("a.paginate_button.current").click();					
 		});
 	} );
 
@@ -72,7 +76,7 @@ function del_row(id){
 	$.ajax({
 		url: "/PIDRowUpdate/"+id+"/delete/delete",			
 		}).done(function() {
-		$(this).toggleClass('selected');
-		table_handle.draw();			
-	});
+			$(this).toggleClass('selected');
+			table_handle.draw();			
+		});
 }	
