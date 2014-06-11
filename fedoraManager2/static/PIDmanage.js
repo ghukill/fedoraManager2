@@ -58,8 +58,7 @@ function paintTable(username){
 			$(this).toggleClass('selected');
 			var cpage = table_handle.page();
 			console.log(cpage);
-			table_handle.draw()
-			// $("a[data-dt-idx="+(cpage+1)+"]").click();						
+			table_handle.draw();								
 			$("a.paginate_button.current").click();					
 		});
 	} );

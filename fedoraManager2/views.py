@@ -25,9 +25,9 @@ import time
 import json
 import pickle
 import sys
-# import importlib
-# import pprint
 from uuid import uuid4
+import json
+import sunburnt
 
 # get celery instance / handle
 from cl.cl import celery
@@ -371,16 +371,25 @@ def PIDRowUpdate(id,action,status):
 
 
 # PID check for user
-@app.route("/PIDSolr")
+@app.route("/PIDSolr",methods=['POST', 'GET'])
 def PIDSolr():	
 	# get username from session
 	username = session['username']
-	# set action to 'view'
-	action = "view"
-	print "Current action is:",action
+
+	if request.method == 'POST':	
+		print request.data	 
+		# PID = form.PID.data				
+		# jobs.sendUserPIDs(username,PID)
+		# return redirect("/PIDmanage")	
+
+		# # search string
+		# search_string = request.GET['q']
+
+		# si = sunburnt.SolrInterface("http://localhost:8080/solr/linkPad/")
+		# query_results = si.query(search_string)
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSQL.html",username=username)
+	return render_template("PIDSolr.html",username=username)
 
 
 
