@@ -11,14 +11,30 @@
 </form>
 
 {% if q_results %}
-<div id="results">
-	<ul>
-		{% for PID in q_results.documents %}
-		<!-- <li>{{PID.linkTitle}} - {{PID.linkURL}}</li> -->
-		<li>{{PID}}</li>
-		{% endfor %}	
-	</ul>
-</div>
+<table id="PIDtable" class="display" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>linkTitle</th>
+            <th>linkURL</th>            
+        </tr>
+    </thead>    
+    <tbody>
+   		{% for PID in q_results.documents %}
+   		<tr>
+			<td>{{PID.linkTitle}}</td>
+			<td>{{PID.linkURL}}</td>			
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
 {% endif %}
+
+
+<script type="text/javascript" src="{{ url_for('static',filename='PIDSolr.js')}}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        paintTable("{{username}}");
+    });    
+</script>
 
 {% include 'footer.html' %}

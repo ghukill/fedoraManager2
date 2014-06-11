@@ -380,8 +380,16 @@ def PIDSolr():
 
 	if request.method == 'POST':		
 
-		query = {'q' : form.q.data, 'fl' : form.fl.data}
+		query = {'q':form.q.data, 'fq':form.fq.data, 'fl':form.fl.data, 'rows':100000}
 		q_results = solr_handle.search(**query)
+
+		# # return solr results as json for data tables
+		# if request.args.get("data","") == "true":
+		# 	'''
+		# 	prepare data here for jquery data tables
+		# 	'''
+		# 	return "exporting solr results"
+
 
 		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results)		
 
