@@ -17,9 +17,6 @@ from wtforms import TextField
 # from flask.ext.wtf import Form
 # from wtforms.fields import TextField, BooleanField
 
-# zato paginator
-# from zato.redis_paginator import ListPaginator, ZSetPaginator
-
 # python modules
 import time
 import json
@@ -27,13 +24,15 @@ import pickle
 import sys
 from uuid import uuid4
 import json
-import sunburnt
 
 # get celery instance / handle
 from cl.cl import celery
 import jobs
 import forms
 from redisHandles import *
+
+# solr handles
+from solrHandles import solr_handle
 
 
 # fake session data
@@ -376,20 +375,18 @@ def PIDSolr():
 	# get username from session
 	username = session['username']
 
-	if request.method == 'POST':	
-		print request.data	 
-		# PID = form.PID.data				
-		# jobs.sendUserPIDs(username,PID)
-		# return redirect("/PIDmanage")	
+	# get form
+	form = forms.solrSearch(request.form)
 
-		# # search string
-		# search_string = request.GET['q']
+	if request.method == 'POST':		
 
-		# si = sunburnt.SolrInterface("http://localhost:8080/solr/linkPad/")
-		# query_results = si.query(search_string)
+		query = {'q' : form.q.data, 'fl' : form.fl.data}
+		q_results = solr_handle.search(**query)
+
+		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results)		
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSolr.html",username=username)
+	return render_template("PIDSolr.html",username=username, form=form)
 
 
 

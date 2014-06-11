@@ -1,22 +1,24 @@
 {% include 'header.html' %}
 
+<h3>Solr Query & Select</h3>
 
-<div class="row-fluid">
-  <h3>Solr Query & Select</h3>
-  <p>This utility queries Solr and return PIDs from those documents that satisfy the query.  <strong>Currently, this is limited to the MODS datastream only.</strong></p>
-</div>
+<form method="POST" action="/PIDSolr">
+    {{ form.csrf_token }}    
+    {{ form.q.label }} {{ form.q(size=60) }}<br>
+    {{ form.fq.label }} {{ form.fq(size=60) }}<br>
+    {{ form.fl.label }} {{ form.fl(size=60) }}<br>    
+    <input type="submit" value="Go">
+</form>
 
-<div class="row-fluid">
-  <div id="solr_query" class="span9"> 
-    <form id="solr_query_form" action="/PIDSolr" method="POST">
-      <h4>Construct Query</h4>            
-      <span><strong>q</strong> - query</span></br>
-      <input id='q' type='text' value="*:*" placeholder="*:*"/></br>
-      <span><strong>fq</strong> - filter query</span></br>
-      <input id='fq' type='text' placeholder="mods_host_title_ms:Changing Face of the Auto Industry"/></br>
-      <span><strong>fl</strong> - specify fields to return <span class="text-warning">(not applicable here)</span></br>
-      <input id='fl' type='text' placeholder="mods_title_ms"/></br>              
-      <button type="submit" class="btn">search</button>
-    </form>
-  </div>
+{% if q_results %}
+<div id="results">
+	<ul>
+		{% for PID in q_results.documents %}
+		<!-- <li>{{PID.linkTitle}} - {{PID.linkURL}}</li> -->
+		<li>{{PID}}</li>
+		{% endfor %}	
+	</ul>
 </div>
+{% endif %}
+
+{% include 'footer.html' %}
