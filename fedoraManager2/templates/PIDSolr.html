@@ -10,6 +10,7 @@
     {{ form.fl.label }} {{ form.fl(size=60) }}<br>  
     <p>------ Fedora Relationships --------</p>    
     <select name="collection" id="collection">
+        <option >Refine by Collection...</option>
     {% for coll in coll_docs %}
         <option value="{{ coll.id|safe }}">{{ coll.dc_title[0]|safe }}</option>
     {% endfor %}
