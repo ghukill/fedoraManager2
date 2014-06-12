@@ -3,10 +3,19 @@
 <h3>Solr Query & Select</h3>
 
 <form method="POST" action="/PIDSolr">
+    <p>------ Native Solr Fields --------</p>
     {{ form.csrf_token }}    
     {{ form.q.label }} {{ form.q(size=60) }}<br>
     {{ form.fq.label }} {{ form.fq(size=60) }}<br>
-    {{ form.fl.label }} {{ form.fl(size=60) }}<br>    
+    {{ form.fl.label }} {{ form.fl(size=60) }}<br>  
+    <p>------ Fedora Relationships --------</p>    
+    <select name="collection" id="collection">
+    {% for coll in coll_docs %}
+        <option value="{{ coll.id|safe }}">{{ coll.dc_title[0]|safe }}</option>
+    {% endfor %}
+    </select><br>
+    {{ form.raw_rdf.label }} {{ form.raw_rdf(size=60) }}<br>
+
     <input type="submit" value="Go">
 </form>
 

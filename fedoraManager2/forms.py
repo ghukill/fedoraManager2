@@ -11,4 +11,5 @@ class PIDselection(Form):
 class solrSearch(Form):
 	q = StringField('query (q)')
 	fq = StringField('filter query (fq_')
-	fl = StringField('fields to return (fl)')
+	fl = StringField('fields to return (fl)')	
+	raw_rdf = StringField('Raw RDF')

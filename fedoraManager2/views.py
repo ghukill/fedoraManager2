@@ -9,6 +9,8 @@ from fedoraManager2 import redisHandles
 from flask import render_template, request, session, redirect, make_response
 from flask.ext.sqlalchemy import SQLAlchemy
 
+import utilities
+
 # forms
 # OLD (mitten)
 from flask_wtf import Form
@@ -385,11 +387,41 @@ def PIDSolr():
 	# get form
 	form = forms.solrSearch(request.form)
 
-	if request.method == 'POST':		
+	# get collections
+	coll_query = {'q':"rels_hasContentModel:*Collection", 'fl':["id","dc_title"], 'rows':1000}
+	coll_results = solr_handle.search(**coll_query)
+	coll_docs = coll_results.documents
 
-		query = {'q':form.q.data, 'fq':form.fq.data, 'fl':form.fl.data, 'rows':100000}
+	# perform search
+	if request.method == 'POST':
+
+		# build base with native Solr queries
+		query = {'q':form.q.data, 'fq':[form.fq.data], 'fl':[form.fl.data], 'rows':100000}
+		
+
+		'''
+		SLOW DOWN.
+		All this can be improved, leverage forms in Flask more
+			- will automatically select the field I'm assuming, etc.
+		'''
+		
+		# collection drop-down	
+		if 'collection' in request.form:
+			collection = request.form['collection']
+			escaped = collection.replace(":","\:") 
+			query['fq'].append("rels_isMemberOfCollection:info\:fedora/"+escaped)
+		
+		# raw_rdf
+		# if form.raw_rdf.data:
+		# 	escaped = form.rels_isMemberOfCollection.data.replace(":","\:") 
+		# 	query['fq'].append("rels_isMemberOfCollection:info\:fedora/"+escaped)
+
+		'''
+		end improvements
+		'''
+
+		print query
 		q_results = solr_handle.search(**query)
-
 		output_dict = {}
 		data = []
 		for each in q_results.documents:
@@ -403,10 +435,10 @@ def PIDSolr():
 		output_dict['data'] = data
 		json_output = json.dumps(data)
 
-		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results, json_output=json_output)		
+		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results, json_output=json_output, coll_docs=coll_docs)		
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSolr.html",username=username, form=form)
+	return render_template("PIDSolr.html",username=username, form=form, coll_docs=coll_docs)
 
 
 # PID check for user
