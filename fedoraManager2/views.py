@@ -267,7 +267,7 @@ def task_status(task_id):
 # PID MANAGEMENT
 ####################################################################################
 
-@app.route("/PIDselection", methods=['POST', 'GET'])
+@app.route("/PIDselection")
 def PIDselection():
 	# get username from session
 	username = session['username']
@@ -365,13 +365,12 @@ def PIDRowUpdate(id,action,status):
 		print "Deleted PID id#",id,"from SQL database"
 
 	# commit
-	db.session.commit()
-	print "SQL updated at the row level ."
+	db.session.commit()	
 
 	return "PID updated."
 
 
-# PID check for user
+# PID selection via Solr
 @app.route("/PIDSolr",methods=['POST', 'GET'])
 def PIDSolr():	
 	'''
@@ -410,7 +409,29 @@ def PIDSolr():
 	return render_template("PIDSolr.html",username=username, form=form)
 
 
+# PID check for user
+@app.route("/updatePIDsfromSolr/<update_type>", methods=['POST', 'GET'])
+def updatePIDsfromSolr(update_type):	
+	# get username from session
+	username = session['username']	
+	print "Sending PIDs to",username
 
+	# retrieve PIDs
+	PIDs = request.form['json_package']
+	PIDs = json.loads(PIDs)	
+
+	# add PIDs to SQL
+	if update_type == "add":		
+		jobs.sendUserPIDs(username,PIDs)
+		return "PIDs sent to",username
+	
+	# remove PIDs from SQL
+	if update_type == "remove":
+		print "removing each PID from SQL..."
+		jobs.removeUserPIDs(username,PIDs)
+		print "...complete."	
+		return "PIDs removed for",username
+	
 
 
 

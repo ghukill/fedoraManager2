@@ -10,6 +10,15 @@
     <input type="submit" value="Go">
 </form>
 
+<h2>actions</h2>
+<button id="sendSelPIDs">Send Selected to User PIDs</button>
+<button id="sendAllPIDs">Send all to User PIDs</button>
+<span> /// </span>
+<button id="removeSelPIDs">Remove Selected from User PIDs</button>
+<button id="removeAllPIDs">Remove All from User PIDs</button>
+
+<h2>results</h2>
+
 {% if q_results %}
 <table id="PIDtable" class="display" cellspacing="0" width="100%">
     <thead>
@@ -17,27 +26,18 @@
             <th>PID</th>
             <th>dc_title</th>            
         </tr>
-    </thead>    
-    <!--
-    <tbody>
-   		{% for PID in q_results.documents %}
-   		<tr>
-			<td>{{PID.linkTitle}}</td>
-			<td>{{PID.linkURL}}</td>			
-		</tr>
-		{% endfor %}
-	</tbody>
-    -->
+    </thead>
 </table>
 {% endif %}
 
-
 <script type="text/javascript" src="{{ url_for('static',filename='PIDSolr.js')}}"></script>
+{% if json_output %}
 <script type="text/javascript">
-    $(document).ready(function(){
-        var json_output = {{json_output|safe}};
+    $(document).ready(function(){        
+        var json_output = {{json_output|safe}};        
         paintTable(json_output);
     });    
 </script>
+{% endif %}
 
 {% include 'footer.html' %}

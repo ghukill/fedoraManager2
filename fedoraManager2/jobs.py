@@ -3,14 +3,11 @@
 # dep
 import redis
 import pickle
+import time
 # proj
 import models
 from redisHandles import *
 from fedoraManager2 import db, db_con
-
-# zato paginator
-# from zato.redis_paginator import ListPaginator, ZSetPaginator
-
 
 # Job Management
 ############################################################################################################
@@ -55,23 +52,42 @@ def taskGet(job_num):
 	taskHand.completed_tasks = 	completed_tasks	
 	return taskHand
 
-def updateSQLJobStatus(job_num):
-	pass
-	# updates status in 
-	# db.session.add(models.user_jobs(job_num,username, "init"))	
-	# db.session.commit() 
-
 
 # PID selection
 ############################################################################################################
 
 # PID selection
 def sendUserPIDs(username,PIDs):
-	print "Storing selected PIDs for {username}".format(username=username)				
-	for PID in PIDs:
-		db.session.add(models.user_pids(PID,username,"unselected"))	
-	db.session.commit() # a failed commit while fail the whole lot
-	print "PIDs stored"	
+	stime = time.time()	
+	''' expecting username and list of PIDs'''
+	print "Storing selected PIDs for {username}".format(username=username)
+
+	# insert into table via list comprehension
+	values_groups = [(each.encode('ascii'),username.encode('ascii'),'unselected') for each in PIDs]
+	values_groups_string = str(values_groups)[1:-1] # trim brackets	
+	db.session.execute("INSERT INTO user_pids (PID,username,status) VALUES {values_groups_string}".format(values_groups_string=values_groups_string));
+	db.session.commit()	
+
+	print "PIDs stored"		
+	etime = time.time()
+	ttime = (etime - stime) * 1000
+	print "Took this long to add PIDs to SQL",ttime,"ms"
+
+
+# PID removal
+def removeUserPIDs(username,PIDs):
+	stime = time.time()	
+	print "Removing selected PIDs for {username}".format(username=username)	
+	
+	# delete from table
+	targets_tuple = tuple([each.encode('ascii') for each in PIDs])	
+	db.session.execute("DELETE FROM user_pids WHERE PID in {targets_tuple}".format(targets_tuple=targets_tuple));
+	db.session.commit()
+
+	etime = time.time()
+	ttime = (etime - stime) * 1000
+	print "Took this long to remove PIDs to SQL",ttime,"ms"
+	print "PIDs removed"	
 
 
 

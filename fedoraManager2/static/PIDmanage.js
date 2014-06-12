@@ -4,7 +4,7 @@ var table_handle = "";
 
 function paintTable(username){
 
-	table_handle = $('#example').DataTable( {		
+	table_handle = $('#PIDtable').DataTable( {		
 	    "serverSide": true,			    	    
 		"ajax": 'http://162.243.93.130/cgi-bin/php_simple.php',		
 		"columns": [
@@ -44,22 +44,15 @@ function paintTable(username){
         start:1
 	} );
 	
-	// LEAVE FOR REFERENCE, searchCols WORKING ABOVE PER BUG FIX IN DATATABLES
-	// filter only the user
-	// https://datatables.net/forums/discussion/comment/61834#Comment_61834
-	// table_handle.columns(2).search(username).draw();	
 
-	// selects row
-	$('#example tbody').on('click', 'tr', function () {
+	// row select toggle
+	$('#PIDtable tbody').on('click', 'tr', function () {
 	    var id = $(this).children()[0].innerHTML;	    
 		$.ajax({
 			url: "/PIDRowUpdate/"+id+"/update_status/toggle",			
 			}).done(function() {
 			$(this).toggleClass('selected');
-			var cpage = table_handle.page();
-			console.log(cpage);
-			table_handle.draw();								
-			$("a.paginate_button.current").click();					
+			table_handle.draw( false ); // false parameter keeps current page
 		});
 	} );
 
@@ -68,6 +61,17 @@ function paintTable(username){
     // $('#button').click( function () {
     //     alert( table.rows('.selected').data().length +' row(s) selected' );
     // } );
+
+	// don't need, but might be worth saving
+	// var cpage = table_handle.page();
+	// console.log(cpage);
+	// table_handle.draw();
+	// $("a.paginate_button.current").click();					
+
+	// LEAVE FOR REFERENCE, searchCols WORKING ABOVE PER BUG FIX IN DATATABLES
+	// filter only the user
+	// https://datatables.net/forums/discussion/comment/61834#Comment_61834
+	// table_handle.columns(2).search(username).draw();	
 }
 
 // delete row
