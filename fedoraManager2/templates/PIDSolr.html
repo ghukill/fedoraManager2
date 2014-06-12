@@ -14,10 +14,11 @@
 <table id="PIDtable" class="display" cellspacing="0" width="100%">
     <thead>
         <tr>
-            <th>linkTitle</th>
-            <th>linkURL</th>            
+            <th>PID</th>
+            <th>dc_title</th>            
         </tr>
     </thead>    
+    <!--
     <tbody>
    		{% for PID in q_results.documents %}
    		<tr>
@@ -26,6 +27,7 @@
 		</tr>
 		{% endfor %}
 	</tbody>
+    -->
 </table>
 {% endif %}
 
@@ -33,7 +35,8 @@
 <script type="text/javascript" src="{{ url_for('static',filename='PIDSolr.js')}}"></script>
 <script type="text/javascript">
     $(document).ready(function(){
-        paintTable("{{username}}");
+        var json_output = {{json_output|safe}};
+        paintTable(json_output);
     });    
 </script>
 

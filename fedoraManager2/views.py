@@ -24,6 +24,7 @@ import pickle
 import sys
 from uuid import uuid4
 import json
+import unicodedata
 
 # get celery instance / handle
 from cl.cl import celery
@@ -41,6 +42,9 @@ from solrHandles import solr_handle
 app.secret_key = 'ShoppingHorse'
 ####################################
 
+
+# GENERAL
+#########################################################################################################
 @app.route("/")
 def index():
 	if "username" in session:
@@ -48,18 +52,6 @@ def index():
 	else:
 		username = "User not set."
 	return render_template("index.html",username=username)
-
-
-@app.route("/task_status/<task_id>")
-def task_status(task_id):
-	
-	# global way to surgically pick task out of celery memory		
-	result = actions.celery.AsyncResult(task_id)	
-	state, retval = result.state, result.result
-	response_data = dict(id=task_id, status=state, result=retval)
-	
-	return json.dumps(response_data)	
-
 
 @app.route('/userPage/<username>')
 def userPage(username):
@@ -262,6 +254,16 @@ def userAllJobs():
 	return render_template("userAllJobs.html",username=session['username'],return_package=return_package)
 
 
+@app.route("/task_status/<task_id>")
+def task_status(task_id):
+	
+	# global way to surgically pick task out of celery memory		
+	result = actions.celery.AsyncResult(task_id)	
+	state, retval = result.state, result.result
+	response_data = dict(id=task_id, status=state, result=retval)
+	
+	return json.dumps(response_data)	
+
 # PID MANAGEMENT
 ####################################################################################
 
@@ -372,6 +374,12 @@ def PIDRowUpdate(id,action,status):
 # PID check for user
 @app.route("/PIDSolr",methods=['POST', 'GET'])
 def PIDSolr():	
+	'''
+	Current Approach: If POST, send results as large array to template, save as JS variable
+		- works great so far at 800+ items, but what about 100,000+?
+		- documentation says ~ 50,000 is the limit
+		- will need to think of a server-side option
+	'''
 	# get username from session
 	username = session['username']
 
@@ -383,15 +391,20 @@ def PIDSolr():
 		query = {'q':form.q.data, 'fq':form.fq.data, 'fl':form.fl.data, 'rows':100000}
 		q_results = solr_handle.search(**query)
 
-		# # return solr results as json for data tables
-		# if request.args.get("data","") == "true":
-		# 	'''
-		# 	prepare data here for jquery data tables
-		# 	'''
-		# 	return "exporting solr results"
+		output_dict = {}
+		data = []
+		for each in q_results.documents:
+			try:			
+				PID = each['id'].encode('ascii','ignore')
+				dc_title = each['dc_title'][0].encode('ascii','ignore')
+				data.append([PID,dc_title])
+			except:				
+				print "Could not render:",each['id'] #unicdoe solr id
 
+		output_dict['data'] = data
+		json_output = json.dumps(data)
 
-		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results)		
+		return render_template("PIDSolr.html",username=username, form=form, q_results=q_results, json_output=json_output)		
 
 	# pass the current PIDs to page as list	
 	return render_template("PIDSolr.html",username=username, form=form)
