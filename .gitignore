@@ -2,5 +2,6 @@
 notes.txt
 *.pyc
 *.out
+*.output
 nohup*.*
 test*.*
