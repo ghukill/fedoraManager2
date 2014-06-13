@@ -269,26 +269,26 @@ def task_status(task_id):
 # PID MANAGEMENT
 ####################################################################################
 
-@app.route("/PIDselection")
-def PIDselection():
-	# get username from session
-	username = session['username']
-	return render_template('PIDselection.html', username=username)
+# @app.route("/PIDselection")
+# def PIDselection():
+# 	# get username from session
+# 	username = session['username']
+# 	return render_template('PIDselection.html', username=username)
 
 
-@app.route("/PIDenter", methods=['POST', 'GET'])
-def PIDenter():	
+# @app.route("/PIDenter", methods=['POST', 'GET'])
+# def PIDenter():	
 
-	# get username from session
-	username = session['username']
-	form = forms.PIDselection(request.form)
+# 	# get username from session
+# 	username = session['username']
+# 	form = forms.PIDselection(request.form)
 
-	if request.method == 'POST':		 
-		PID = form.PID.data				
-		jobs.sendUserPIDs(username,PID)
-		return redirect("/PIDmanage")		
+# 	if request.method == 'POST':		 
+# 		PID = form.PID.data				
+# 		jobs.sendUserPIDs(username,PID)
+# 		return redirect("/PIDmanage")		
 
-	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
+# 	return render_template('PIDformSQL.html', username=username, form=form)# PID selection sandboxing
 
 
 # PID check for user
@@ -296,26 +296,30 @@ def PIDenter():
 def PIDmanage():	
 	# get username from session
 	username = session['username']
-	# set action to 'view'
-	action = "view"
-	print "Current action is:",action
+
+	# gen group list	
+	user_pid_groups = db.session.query(models.user_pids).filter(models.user_pids.username == username).group_by("group_name")
+	group_names = [each.group_name.encode('ascii','ignore') for each in user_pid_groups]	
 
 	# pass the current PIDs to page as list	
-	return render_template("PIDSQL.html",username=username)
+	return render_template("PIDSQL.html",username=username, group_names=group_names)
 
 
-@app.route("/PIDmanageAction/<action>")
+
+@app.route("/PIDmanageAction/<action>", methods=['POST', 'GET'])
 def PIDmanageAction(action):	
 	# get username from session
 	username = session['username']
 	print "Current action is:",action
 
+	# if post AND group toggle
+	if request.method == 'POST' and action == 'group_toggle':		
+		group_name = request.form['group_name']
+		db.session.execute("UPDATE user_pids SET status = CASE WHEN status = 'unselected' THEN 'selected' ELSE 'unselected' END WHERE username = '{username}' AND group_name = '{group_name}';".format(username=username,group_name=group_name))
+
 	# select all
 	if action == "s_all":
-		print "All PIDs selected..."
-		'''
-		Quite slow, and CPU intensive for 100,000+ PIDs
-		'''
+		print "All PIDs selected..."		
 		db.session.query(models.user_pids).filter(models.user_pids.username == username).update({'status': "selected"})
 	
 	# select none
@@ -334,6 +338,8 @@ def PIDmanageAction(action):
 
 	# commit changes
 	db.session.commit()
+
+	return "Update Complete."
 
 	# pass the current PIDs to page as list	
 	return redirect("/PIDmanage")
@@ -373,7 +379,7 @@ def PIDRowUpdate(id,action,status):
 
 
 # PID selection via Solr
-@app.route("/PIDSolr",methods=['POST', 'GET'])
+@app.route("/PIDSolr", methods=['POST', 'GET'])
 def PIDSolr():	
 	'''
 	Current Approach: If POST, send results as large array to template, save as JS variable

@@ -61,6 +61,8 @@ function paintTable(username){
 		});
 	} );
 
+	
+
 
  
     // $('#button').click( function () {
@@ -79,6 +81,36 @@ function paintTable(username){
 	// table_handle.columns(2).search(username).draw();	
 }
 
+function PIDmanageAction(action){
+
+
+	if (action == "group_toggle"){		
+		data = {"group_name":$("#group_name").val()}
+		console.log(data);
+		$.ajax({
+			url: "/PIDmanageAction/"+action,		
+			type:"POST",
+			data:data			
+			})
+		.done(function(response) {
+			console.log(response);		
+			table_handle.draw( false );			
+		});
+	}
+	
+	else {
+		$.ajax({
+			url: "/PIDmanageAction/"+action,					
+			})
+		.done(function(response) {
+			console.log(response);		
+			table_handle.draw( false );			
+		});
+	}
+	
+	
+}
+
 // delete row
 function del_row(id){	
 	$.ajax({
@@ -88,3 +120,16 @@ function del_row(id){
 			table_handle.draw();			
 		});
 }	
+
+// filter by gruop
+function filterGroup(){
+	table_handle.column(4).search($("#group_filter").val()).draw(false);
+}
+
+
+
+
+
+
+
+
