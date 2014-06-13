@@ -1,4 +1,4 @@
-from wtforms import Form, BooleanField, StringField, validators, fields
+from wtforms import Form, BooleanField, StringField, SelectField, validators, fields
 
 ################################################################################################################
 # this is essentially temporary - selection will come from the results of Solr, Fed, Risearch
@@ -9,7 +9,11 @@ class PIDselection(Form):
     
 
 class solrSearch(Form):
+	# native Solr
 	q = StringField('query (q)')
 	fq = StringField('filter query (fq_')
 	fl = StringField('fields to return (fl)')	
-	raw_rdf = StringField('Raw RDF')
+
+	# Fedora RELS-EXT fields
+	collection_object = SelectField('Collection')
+	content_model = SelectField('Content Type')	

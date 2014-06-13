@@ -387,43 +387,53 @@ def PIDSolr():
 	# get form
 	form = forms.solrSearch(request.form)
 
-	# get collections
+	# dynamically update fields
+
+	# collection selection
 	coll_query = {'q':"rels_hasContentModel:*Collection", 'fl':["id","dc_title"], 'rows':1000}
 	coll_results = solr_handle.search(**coll_query)
 	coll_docs = coll_results.documents
+	form.collection_object.choices = [(each['id'].encode('ascii','ignore'), each['dc_title'][0].encode('ascii','ignore')) for each in coll_docs]
+	form.collection_object.choices.insert(0,("","All Collections"))	
 
-	# perform search
+	# content model
+	cm_query = {'q':'*', 'facet' : 'true', 'facet.field' : 'rels_hasContentModel'}
+	cm_results = solr_handle.search(**cm_query)	
+	form.content_model.choices = [(each, each.split(":")[-1]) for each in cm_results.facets['facet_fields']['rels_hasContentModel']]
+	form.content_model.choices.insert(0,("","All Content Types"))
+
+	# perform search	
 	if request.method == 'POST':
-
+		
 		# build base with native Solr queries
 		query = {'q':form.q.data, 'fq':[form.fq.data], 'fl':[form.fl.data], 'rows':100000}
+				
+		# Fedora RELS-EXT
+		# collection selection
+		if form.collection_object.data:			
+			print "Collection refinement:",form.collection_object.data						
+			escaped_coll = form.collection_object.data.replace(":","\:") 
+			query['fq'].append("rels_isMemberOfCollection:info\:fedora/"+escaped_coll)				
+
+
+		# content model / type selection
+		if form.content_model.data:			
+			print "Content Model refinement:",form.content_model.data
+			escaped_cm = form.content_model.data.replace(":","\:") 
+			query['fq'].append("rels_hasContentModel:"+escaped_cm)				
+
 		
 
-		'''
-		SLOW DOWN.
-		All this can be improved, leverage forms in Flask more
-			- will automatically select the field I'm assuming, etc.
-		'''
-		
-		# collection drop-down	
-		if 'collection' in request.form:
-			collection = request.form['collection']
-			escaped = collection.replace(":","\:") 
-			query['fq'].append("rels_isMemberOfCollection:info\:fedora/"+escaped)
-		
-		# raw_rdf
-		# if form.raw_rdf.data:
-		# 	escaped = form.rels_isMemberOfCollection.data.replace(":","\:") 
-		# 	query['fq'].append("rels_isMemberOfCollection:info\:fedora/"+escaped)
-
-		'''
-		end improvements
-		'''
-
+		# issue query
 		print query
+		stime = time.time() 
 		q_results = solr_handle.search(**query)
+		etime = time.time()
+		ttime = (etime - stime) * 1000
+		print "Solr Query took:",ttime,"ms"		
 		output_dict = {}
 		data = []
+		stime = time.time()
 		for each in q_results.documents:
 			try:			
 				PID = each['id'].encode('ascii','ignore')
@@ -431,6 +441,9 @@ def PIDSolr():
 				data.append([PID,dc_title])
 			except:				
 				print "Could not render:",each['id'] #unicdoe solr id
+		etime = time.time()
+		ttime = (etime - stime) * 1000
+		print "Solr Munging for DataTables took::",ttime,"ms"		
 
 		output_dict['data'] = data
 		json_output = json.dumps(data)
@@ -452,17 +465,20 @@ def updatePIDsfromSolr(update_type):
 	PIDs = request.form['json_package']
 	PIDs = json.loads(PIDs)	
 
+	# get PIDs group_name
+	group_name = request.form['group_name'].encode('ascii','ignore')
+
 	# add PIDs to SQL
 	if update_type == "add":		
-		jobs.sendUserPIDs(username,PIDs)
-		return "PIDs sent to",username
+		jobs.sendUserPIDs(username,PIDs,group_name)		
 	
 	# remove PIDs from SQL
 	if update_type == "remove":
 		print "removing each PID from SQL..."
 		jobs.removeUserPIDs(username,PIDs)
-		print "...complete."	
-		return "PIDs removed for",username
+		print "...complete."
+
+	return "Update Complete."
 	
 
 

@@ -57,21 +57,22 @@ def taskGet(job_num):
 ############################################################################################################
 
 # PID selection
-def sendUserPIDs(username,PIDs):
+def sendUserPIDs(username,PIDs,group_name):
 	stime = time.time()	
 	''' expecting username and list of PIDs'''
 	print "Storing selected PIDs for {username}".format(username=username)
 
 	# insert into table via list comprehension
-	values_groups = [(each.encode('ascii'),username.encode('ascii'),'unselected') for each in PIDs]
-	values_groups_string = str(values_groups)[1:-1] # trim brackets	
-	db.session.execute("INSERT INTO user_pids (PID,username,status) VALUES {values_groups_string}".format(values_groups_string=values_groups_string));
+	values_groups = [(each.encode('ascii'),username.encode('ascii'),'unselected',group_name) for each in PIDs]
+	values_groups_string = str(values_groups)[1:-1] # trim brackets			
+	db.session.execute("INSERT INTO user_pids (PID,username,status,group_name) VALUES {values_groups_string}".format(values_groups_string=values_groups_string));
 	db.session.commit()	
 
 	print "PIDs stored"		
 	etime = time.time()
 	ttime = (etime - stime) * 1000
 	print "Took this long to add PIDs to SQL",ttime,"ms"
+
 
 
 # PID removal

@@ -45,8 +45,8 @@ function paintTable(json_output){
         $.ajax({
 			url: "/updatePIDsfromSolr/add",
 			type: "POST",
-			data: {"json_package":json_package}
-		}).done(function(response) { console.log(response) });
+			data: {"json_package":json_package,"group_name":$("#group_name").val()}
+		}).done(function(response) { console.log(response); alert("Selected PIDs sent.") });
 	});
 
 
@@ -60,15 +60,14 @@ function paintTable(json_output){
         }     
         
         // create json to send
-        json_package = JSON.stringify(PIDs_list);
-        console.log(json_package);
+        json_package = JSON.stringify(PIDs_list);        
 
         // send PIDs to SQL for user
         $.ajax({
 			url: "/updatePIDsfromSolr/add",
 			type: "POST",
-			data: {"json_package":json_package}
-		}).done(function(response) { console.log(response) });
+			data: {"json_package":json_package,"group_name":$("#group_name").val()}
+		}).done(function(response) { console.log(response); alert("All PIDs sent.") });
 	});
 
 
@@ -83,15 +82,13 @@ function paintTable(json_output){
         
         // create json to send
         json_package = JSON.stringify(PIDs_list);
-        console.log(json_package);
-
 
         // send PIDs to SQL for user
         $.ajax({
 			url: "/updatePIDsfromSolr/remove",
 			type: "POST",
-			data: {"json_package":json_package}
-		}).done(function(response) { console.log(response) });
+			data: {"json_package":json_package,"group_name":$("#group_name").val()}
+		}).done(function(response) { console.log(response); alert("Selected PIDs removed.") });
 	});
 
 
@@ -106,15 +103,16 @@ function paintTable(json_output){
         
         // create json to send
         json_package = JSON.stringify(PIDs_list);
-        console.log(json_package);
-
 
         // send PIDs to SQL for user
         $.ajax({
 			url: "/updatePIDsfromSolr/remove",
 			type: "POST",
-			data: {"json_package":json_package}
-		}).done(function(response) { console.log(response) });
+			data: {"json_package":json_package,"group_name":$("#group_name").val()}
+		}).always(function(response) { 
+			console.log(response);
+			alert("All PIDs removed."); 
+		});
 	});
 
 

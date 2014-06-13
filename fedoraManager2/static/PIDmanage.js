@@ -15,11 +15,15 @@ function paintTable(username){
 				"name":"PID" 
 			},
 		    { 	"searchable": true, 
-		    	"name":"username"		    	
-		    },
+		    	"name":"username",
+		    	"visible":false	    	
+		    },		    
 		    {
 		    	"name":"status",
 		    	"visible":false
+		    },
+		    { 	"searchable": true, 
+		    	"name":"group"		    	    	
 		    },
 		    {
 		    	"name":"actions",
@@ -33,6 +37,7 @@ function paintTable(username){
 	        null,
 	        null,	        
 	        { sSearch: username },
+	        null,
 	        null,
 	        null
 	    ],	    
