@@ -11,7 +11,7 @@ import time
 import sys
 
 # import tasks
-from fedoraManager2.actions.fileWrite import fileWrite
+from fedoraManager2.actions.fileWrite.fileWrite import fileWrite
 from fedoraManager2.actions.sampleTasks import sampleTask, sampleFastTask
 
 # Fires *after* task is complete
