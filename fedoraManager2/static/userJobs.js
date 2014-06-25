@@ -50,6 +50,6 @@ function updateLongPoller(status,longPoller){
 		return 3000;
 	}
 	else {
-		return 500;
+		return 1000;
 	}
 }
